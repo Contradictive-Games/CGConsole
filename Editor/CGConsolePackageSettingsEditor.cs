@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
 
@@ -128,4 +127,3 @@ namespace CG.Console.Editor
         }
     }
 }
-#endif

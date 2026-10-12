@@ -7,7 +7,7 @@ using TMPro;
 namespace CG.Console
 {
     [AddComponentMenu(Globals.k_PACKAGE_NAME + "/Console Window")]
-    public class ConsoleWindow : MonoBehaviour
+    public sealed class ConsoleWindow : MonoBehaviour
     {
         public static ConsoleWindow Instance { get; private set; }
 
@@ -28,7 +28,7 @@ namespace CG.Console
 
         #region Enable/Disable
 
-        protected virtual void OnEnable()
+        private void OnEnable()
         {
             Application.logMessageReceived += CreateConsoleOutput;
             if(consoleInput != null) {
@@ -37,7 +37,7 @@ namespace CG.Console
         }
 
 
-        protected virtual void OnDisable()
+        private void OnDisable()
         {
             Application.logMessageReceived -= CreateConsoleOutput;
             if(consoleInput != null) {
@@ -50,7 +50,7 @@ namespace CG.Console
 
         #region Initialization
 
-        protected virtual void Awake()
+        private void Awake()
         {
             if(Instance == null)
             {
@@ -61,15 +61,17 @@ namespace CG.Console
             else
             {
                 Destroy(gameObject);
+                return;
             }
 
 
             if(consoleOutputPrefab == null)
             {
-                Debug.LogWarning($"We are creating a basic ConsoleOutput Prefab, as none we assigned within the inspector");
+                Debug.LogWarning($"We are creating a basic ConsoleOutput Prefab, as none were assigned within the inspector");
                 GameObject obj = new GameObject("consoleoutput");
-                consoleOutputPrefab = obj.AddComponent<TMP_Text>();
+                consoleOutputPrefab = obj.AddComponent<TextMeshProUGUI>();
                 consoleOutputPrefab.fontSize = Settings.TextSize;
+                obj.transform.SetParent(transform);
                 consoleOutputPrefab.gameObject.SetActive(false);
             }
             if(consoleInput != null)
@@ -84,7 +86,7 @@ namespace CG.Console
         }
 
 
-        protected virtual void Start()
+        private void Start()
         {
             ConsoleCommands.RegisterAllCommands();
         }
@@ -94,9 +96,9 @@ namespace CG.Console
 
         #region LogHandling
 
-        protected virtual void CreateConsoleOutput(string message, string stackTrace = "", LogType type = LogType.Log)
+        private void CreateConsoleOutput(string message, string stackTrace = "", LogType type = LogType.Log)
         {
-            if (consoleOutputContainer.childCount >= Settings.MaxLines)
+            if (consoleOutputContainer.childCount >= (Settings?.MaxLines ?? Globals.k_MaxConsoleLogs))
             {
                 Destroy(consoleOutputContainer.GetChild(0).gameObject);
             }
@@ -115,7 +117,7 @@ namespace CG.Console
 
         #region InputField Handling
 
-        protected virtual void OnCommandSubmitted(string input)
+        private void OnCommandSubmitted(string input)
         {
             CommandResponse response = ConsoleCommands.TryExecute(input);
             if(Settings.ShowCommandResponseLogs && !String.IsNullOrWhiteSpace(response.Message)) 
@@ -136,7 +138,7 @@ namespace CG.Console
         }
 
 
-        protected virtual void OnInputFieldUpdated(string input)
+        private void OnInputFieldUpdated(string input)
         {
             if(input.Length == 0 || input.Contains(" ")) {
                 if(autoCompletePopup.activeInHierarchy) autoCompletePopup.SetActive(false);

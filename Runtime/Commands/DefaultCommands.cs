@@ -7,7 +7,7 @@ namespace CG.Console
     {
         #region Load Level
 
-        [ConsoleCmd("load", "Load a level by name")]
+        [ConsoleCmd("load", "Load a level by name (non-async)")]
         private void LoadScene(string sceneName)
         {
             if (SceneManager.GetSceneByName(sceneName) != null)

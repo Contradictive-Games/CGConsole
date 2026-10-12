@@ -18,7 +18,7 @@ namespace CG.Console
             internal readonly ParameterInfo[] Parameters;
             internal readonly object Target;
 
-            internal ConsoleCommand(string command, string description, bool hideFromAutoComplete, bool hideFromHelpCommand, 
+            internal ConsoleCommand(string command, string description, bool hideFromAutoComplete, bool hideFromHelpCommand,
                 MethodInfo methodToExecute, ParameterInfo[] parameters, object target)
             {
                 Command = command;
@@ -55,6 +55,9 @@ namespace CG.Console
 
         public static void RegisterAllCommands(bool mustBeCommandProvider = true)
         {
+            RegisterDefaultCommands();
+
+
 #if UNITY_2023_1_OR_NEWER
             MonoBehaviour[] objects = GameObject.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
 #else
@@ -98,7 +101,7 @@ namespace CG.Console
                 var attr = method.GetCustomAttribute<ConsoleCmdAttribute>();
                 if (attr == null) continue;
 
-                cmdName = attr.CommandName;
+                cmdName = attr.CommandName.ToLowerInvariant().Trim();
 
                 if (!CommandIsValid(cmdName)) continue;
 
@@ -117,35 +120,9 @@ namespace CG.Console
                 Debug.Log($"(CG Console) Registered `{cmdName}` command from {target}");
             }
 
-            RegisterDefaultCommands();
+
 
             UpdateHelpString();
-        }
-
-
-        private static void RegisterCommandsFromSelectively(object target)
-        {
-            if (settings == null) return;
-
-            var methods = target.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            int registeredCount = 0;
-            foreach (var method in methods)
-            {
-                var attr = method.GetCustomAttribute<ConsoleCmdAttribute>();
-                if (attr == null) continue;
-
-                string cmdName = attr.CommandName;
-
-                if (!settings.IsCommandEnabled(cmdName) || !CommandIsValid(cmdName)) continue;
-
-
-                AddNewConsoleCommand(cmdName, attr, method, target);
-
-                if (!attr.HideFromAutoComplete) commandNameList.Add(cmdName);
-                registeredCount++;
-            }
-
-            if (registeredCount > 0 && settings.EnableLoggingForCommandRegistration) Debug.Log($"Successfully registered {registeredCount} default commands");
         }
 
         #endregion
@@ -197,7 +174,16 @@ namespace CG.Console
                 }
             }
 
-            command.MethodToExecute.Invoke(command.Target, parameters);
+            try
+            {
+                command.MethodToExecute.Invoke(command.Target, parameters);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                return new CommandResponse(ResponseType.Error, e.Message);
+            }
+
             return new CommandResponse(ResponseType.Success);
         }
 
@@ -248,7 +234,7 @@ namespace CG.Console
             }
 
             defaultCommandsInstance = new();
-            RegisterCommandsFromSelectively(defaultCommandsInstance);
+            RegisterCommandsFrom(defaultCommandsInstance);
 
             registeredDefaultCommands = true;
         }
@@ -271,7 +257,7 @@ namespace CG.Console
 
             ConsoleCommand cmd = new ConsoleCommand
             (
-                cmdName,
+                cmdName.ToLowerInvariant().Trim(),
                 attr.Description,
                 attr.HideFromAutoComplete,
                 attr.HideFromHelpCommand,
@@ -287,13 +273,16 @@ namespace CG.Console
 
         private static bool CommandIsValid(string cmdName)
         {
-            cmdName.ToLower().Trim();
-
             if (settings == null) return true;
 
             if (!Regex.IsMatch(cmdName, settings.Regex))
             {
                 Debug.LogError($"Received invalid command format. Please remove special characters (excluding underscores). Cmd: {cmdName}");
+                return false;
+            }
+            if(!settings.IsCommandEnabled(cmdName))
+            {
+                Debug.LogWarning($"Command `{cmdName}` exists in the DefaultCommands list and is disabled");
                 return false;
             }
             if (allCommands.ContainsKey(cmdName))

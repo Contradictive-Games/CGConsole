@@ -1,8 +1,6 @@
-#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using System.IO;
 
 namespace CG.Console.Editor
 {
@@ -18,7 +16,7 @@ namespace CG.Console.Editor
         
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
-            settingsAsset = AssetDatabase.LoadAssetAtPath<ConsolePackageSettings>(Utilities.k_SettingsAssetPath);
+            settingsAsset = AssetDatabase.LoadAssetAtPath<ConsolePackageSettings>(Globals.k_SettingsAssetPath);
             
             if (settingsAsset != null)
             {
@@ -74,27 +72,12 @@ namespace CG.Console.Editor
         
         private void CreateSettingsAsset()
         {
-            if (!Directory.Exists(Utilities.k_SettingsAssetDirectory))
-            {
-                Directory.CreateDirectory(Utilities.k_SettingsAssetDirectory);
-                AssetDatabase.Refresh();
-            }
-            
-            var newSettings = ScriptableObject.CreateInstance<ConsolePackageSettings>();
-            newSettings.ResetToDefaults();
-            
-            AssetDatabase.CreateAsset(newSettings, Utilities.k_SettingsAssetDirectory + "/ConsolePackageSettings.asset");
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-            
-            settingsAsset = newSettings;
+            settingsAsset = ConsolePackageSettings.GetOrCreateSettings();
             serializedSettings = new SerializedObject(settingsAsset);
             editor = UnityEditor.Editor.CreateEditor(settingsAsset);
-            
-            Selection.activeObject = newSettings;
-            EditorGUIUtility.PingObject(newSettings);
-            
-            Debug.Log($"CG Console Package settings asset created at: {Utilities.k_SettingsAssetDirectory}"); 
+
+            Selection.activeObject = settingsAsset;
+            EditorGUIUtility.PingObject(settingsAsset);
         }
         
         [SettingsProvider]
@@ -108,4 +91,3 @@ namespace CG.Console.Editor
         }
     }
 }
-#endif

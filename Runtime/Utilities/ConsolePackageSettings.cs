@@ -1,4 +1,5 @@
 using System;
+using UnityEditor;
 using UnityEngine;
 
 namespace CG.Console
@@ -56,20 +57,17 @@ namespace CG.Console
             ConsolePackageSettings settings = null;
 
 #if UNITY_EDITOR
-            settings = UnityEditor.AssetDatabase.LoadAssetAtPath<ConsolePackageSettings>(Globals.k_SettingsAssetPath);
+            settings = AssetDatabase.LoadAssetAtPath<ConsolePackageSettings>(Globals.k_SettingsAssetPath);
 
             if (settings == null)
             {
                 settings = ScriptableObject.CreateInstance<ConsolePackageSettings>();
-                if (settings == null)
+                if (settings != null)
                 {
-                    if (!System.IO.Directory.Exists(Globals.k_SettingsAssetDirectory))
-                    {
-                        System.IO.Directory.CreateDirectory(Globals.k_SettingsAssetDirectory);
-                    }
+                    string guid = AssetDatabase.CreateFolder("Assets/Resources/", Globals.k_PACKAGE_NAME);
                     settings.ResetToDefaults();
-                    UnityEditor.AssetDatabase.CreateAsset(settings, Globals.k_SettingsAssetPath);
-                    UnityEditor.AssetDatabase.SaveAssets();
+                    AssetDatabase.CreateAsset(settings, Globals.k_SettingsAssetPath);
+                    AssetDatabase.SaveAssets();
                 }
             }
 #else
@@ -79,9 +77,9 @@ namespace CG.Console
         }
 
 #if UNITY_EDITOR
-        public static UnityEditor.SerializedObject GetSerializedSettings()
+        public static SerializedObject GetSerializedSettings()
         {
-            return new UnityEditor.SerializedObject(GetOrCreateSettings());
+            return new SerializedObject(GetOrCreateSettings());
         }
 #endif
 
@@ -94,6 +92,7 @@ namespace CG.Console
             }
             return false;
         }
+
 
 
         [ContextMenu("Reset All Settings to Defaults")]
