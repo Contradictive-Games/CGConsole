@@ -94,11 +94,6 @@ namespace CG.Console
         }
 
 
-        private void Start()
-        {
-            if(Instance != this) return;
-        }
-
         #endregion
 
 
@@ -178,6 +173,15 @@ namespace CG.Console
         }
 
         #endregion
+
+        [ConsoleCmd("clear", "Clear the console output")]
+        private void Clear()
+        {
+            for(int i = consoleOutputContainer.childCount - 1; i >= 0; i--)
+            {
+                Destroy(consoleOutputContainer.GetChild(i).gameObject);
+            }
+        }
 
 
         protected virtual void OnDestroy()

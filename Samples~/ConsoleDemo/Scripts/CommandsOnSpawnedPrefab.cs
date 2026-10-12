@@ -7,7 +7,6 @@ namespace CG.Console
         private void OnEnable()
         {
             Debug.Log("I have been spawned, try to type the command order_66 - it should work now!");
-            RegisterCommands();
         }
 
 

@@ -3,12 +3,13 @@ using UnityEngine.SceneManagement;
 
 namespace CG.Console
 {
-    public sealed class DefaultCommands : ICommandProvider
+    internal static class DefaultCommands    
     {
-        #region Load Level
+        [ConsoleCmd("help", "List all available console commands", true, true)]
+        private static void Help() => Debug.Log(ConsoleCommands.HelpText);
 
         [ConsoleCmd("load", "Load a level by name (non-async)")]
-        private void LoadScene(string sceneName)
+        private static void LoadScene(string sceneName)
         {
             if (!Application.CanStreamedLevelBeLoaded(sceneName))
             {
@@ -19,13 +20,9 @@ namespace CG.Console
             SceneManager.LoadScene(sceneName);
         }
 
-        #endregion
-
-
-        #region Quit
 
         [ConsoleCmd("quit", "Exits the application")]
-        private void Quit()
+        private static void Quit()
         {
 
 #if UNITY_EDITOR
@@ -35,50 +32,32 @@ namespace CG.Console
 #endif
         }
 
-        #endregion
-
-
-        #region PlayerPrefs/Keys
-
-        #region Int Keys
 
         [ConsoleCmd("set_intkey", "Set the value of a saved integer by the key name")]
-        private void SetIntKey(string keyName, int value) {
+        private static void SetIntKey(string keyName, int value) {
             PlayerPrefs.SetInt(keyName, value);
             PlayerPrefs.Save();
         }
 
-        [ConsoleCmd("get_intkey")] private void LogIntKey(string keyName) => Debug.Log($"Value for `{keyName}`: {PlayerPrefs.GetInt(keyName)}");
+        [ConsoleCmd("get_intkey")] private static void LogIntKey(string keyName) => Debug.Log($"Value for `{keyName}`: {PlayerPrefs.GetInt(keyName)}");
         
-        #endregion
-
-
-        #region Float Keys
 
         [ConsoleCmd("set_floatkey", "Set the value of a saved float by the key name")]
-        private void SetFloatKey(string keyName, float value) {
+        private static void SetFloatKey(string keyName, float value) {
             PlayerPrefs.SetFloat(keyName, value);
             PlayerPrefs.Save();
         }
 
-        [ConsoleCmd("get_floatkey")] private void LogFloatKey(string keyName) => Debug.Log($"Value for `{keyName}`: {PlayerPrefs.GetFloat(keyName)}");
+        [ConsoleCmd("get_floatkey")] private static void LogFloatKey(string keyName) => Debug.Log($"Value for `{keyName}`: {PlayerPrefs.GetFloat(keyName)}");
         
-        #endregion
-
-
-        #region String Keys
 
         [ConsoleCmd("set_stringkey", "Set the value of a saved string by the key name")]
-        private void SetStringKey(string keyName, string value) {
+        private static void SetStringKey(string keyName, string value) {
             PlayerPrefs.SetString(keyName, value);
             PlayerPrefs.Save();
         }
 
-        [ConsoleCmd("get_stringkey")] private void LogStringKey(string keyName) => Debug.Log($"Value for `{keyName}`: {PlayerPrefs.GetString(keyName)}");
+        [ConsoleCmd("get_stringkey")] private static void LogStringKey(string keyName) => Debug.Log($"Value for `{keyName}`: {PlayerPrefs.GetString(keyName)}");
 
-        #endregion
-
-
-        #endregion
     }
 }
