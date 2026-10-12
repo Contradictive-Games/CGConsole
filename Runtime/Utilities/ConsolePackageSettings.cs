@@ -3,25 +3,21 @@ using UnityEngine;
 
 namespace CG.Console
 {
-    [Serializable]
-    public struct DefaultCommandSetting
-    {
-        public string CommandName;
-        public bool Enabled;
-
-        public DefaultCommandSetting(string name, bool enabled = true)
-        {
-            CommandName = name;
-            Enabled = enabled;
-        }
-    }
-    
-
-    [CreateAssetMenu(fileName = "Console Package Settings", menuName = "Contradictive Games/Console/Package Settings")]
+    [CreateAssetMenu(fileName = "Console Package Settings", menuName = Globals.k_PACKAGE_NAME + "/Package Settings")]
     public sealed class ConsolePackageSettings : ScriptableObject
     {
-        public const string k_PackageSettingsPath = "Assets/Resources/Console/ConsolePackageSettings.asset";
+        [Serializable]
+        public struct DefaultCommandSetting
+        {
+            public string CommandName;
+            public bool Enabled;
 
+            public DefaultCommandSetting(string name, bool enabled = true)
+            {
+                CommandName = name;
+                Enabled = enabled;
+            }
+        }
 
         [Header("Logging")]
         [Tooltip("If you want to see the logs for every time a command is registered")]
@@ -39,7 +35,8 @@ namespace CG.Console
 
         [Header("Default Commands")]
         [Tooltip("You can toggle which of the default commands you would like added")]
-        [SerializeField] private DefaultCommandSetting[] DefaultCommands = new DefaultCommandSetting[]
+        [SerializeField]
+        private DefaultCommandSetting[] DefaultCommands = new DefaultCommandSetting[]
         {
             new DefaultCommandSetting("help", true),
             new DefaultCommandSetting("clear", true),
@@ -60,11 +57,11 @@ namespace CG.Console
 
 #if UNITY_EDITOR
             settings = UnityEditor.AssetDatabase.LoadAssetAtPath<ConsolePackageSettings>(Globals.k_SettingsAssetPath);
-            
-            if(settings == null)
+
+            if (settings == null)
             {
                 settings = ScriptableObject.CreateInstance<ConsolePackageSettings>();
-                if(settings == null)
+                if (settings == null)
                 {
                     if (!System.IO.Directory.Exists(Globals.k_SettingsAssetDirectory))
                     {
@@ -91,12 +88,13 @@ namespace CG.Console
 
         public bool IsCommandEnabled(string commandName)
         {
-            foreach(var cmd in DefaultCommands)
+            foreach (var cmd in DefaultCommands)
             {
-                if(cmd.CommandName == commandName && cmd.Enabled) return true;
+                if (cmd.CommandName == commandName && cmd.Enabled) return true;
             }
             return false;
         }
+
 
         [ContextMenu("Reset All Settings to Defaults")]
         public void ResetToDefaults()

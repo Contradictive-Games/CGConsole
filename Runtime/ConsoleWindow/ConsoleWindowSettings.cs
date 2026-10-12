@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace CG.Console
 {
-    [CreateAssetMenu(fileName = "Console Window Settings Settings", menuName = "Contradictive Games/Console/Console Window Settings")]
+    [CreateAssetMenu(fileName = "Console Window Settings Settings", menuName = Globals.k_PACKAGE_NAME + "/Console Window Settings")]
     public class ConsoleWindowSettings : ScriptableObject
     {
         [Header("Input Field")]

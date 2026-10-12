@@ -28,7 +28,6 @@ namespace CG.Console
 
         #region Enable/Disable
 
-
         protected virtual void OnEnable()
         {
             Application.logMessageReceived += CreateConsoleOutput;
@@ -46,11 +45,10 @@ namespace CG.Console
             }
         }
 
-
         #endregion
 
-        #region Initialization
 
+        #region Initialization
 
         protected virtual void Awake()
         {
@@ -91,11 +89,10 @@ namespace CG.Console
             ConsoleCommands.RegisterAllCommands();
         }
 
-
         #endregion
 
-        #region Validation
 
+        #region Validation
 
 #if UNITY_EDITOR
         protected virtual void OnValidate()
@@ -109,11 +106,10 @@ namespace CG.Console
         }
 #endif
 
-
         #endregion
 
-        #region LogHandling
 
+        #region LogHandling
 
         protected virtual void CreateConsoleOutput(string message, string stackTrace = "", LogType type = LogType.Log)
         {
@@ -131,11 +127,10 @@ namespace CG.Console
             if(scrollRect != null) scrollRect.verticalNormalizedPosition = 0f;
         }
 
-
         #endregion
 
-        #region InputField Handling
 
+        #region InputField Handling
 
         protected virtual void OnCommandSubmitted(string input)
         {
@@ -177,7 +172,6 @@ namespace CG.Console
             }
             autoCompleteText.SetText(txt);
         }
-
 
         #endregion
 

@@ -8,7 +8,7 @@ namespace CG.Console
         Error
     }
     
-    public struct CommandResponse
+    public readonly struct CommandResponse
     {
         public readonly ResponseType ResponseType;
         public readonly string Message;
