@@ -2,8 +2,8 @@ using UnityEngine;
 
 namespace CG.Console
 {
-    [CreateAssetMenu(fileName = "Console Window Settings Settings", menuName = Globals.k_PACKAGE_NAME + "/Console Window Settings")]
-    public class ConsoleWindowSettings : ScriptableObject
+    [CreateAssetMenu(fileName = "Console Window Settings", menuName = Globals.k_PACKAGE_NAME + "/Console Window Settings")]
+    public sealed class ConsoleWindowSettings : ScriptableObject
     {
         [Header("Input Field")]
         public Color InputFieldBackgroundColor = Color.white;
@@ -27,19 +27,5 @@ namespace CG.Console
 
         [Tooltip("If you want to see the error for why a command couldn't execute, or see the success message upon it executing properly")]
         public bool ShowCommandResponseLogs = true;
-        
-
-        public virtual string GetLogColorByLogType(LogType type)
-        {
-            return type switch
-            {
-                LogType.Log => ColorUtility.ToHtmlStringRGBA(NormalColor),
-                LogType.Warning => ColorUtility.ToHtmlStringRGBA(WarningColor),
-                LogType.Error => ColorUtility.ToHtmlStringRGBA(ErrorColor),
-                LogType.Exception => ColorUtility.ToHtmlStringRGBA(ExceptionColor),
-                LogType.Assert => ColorUtility.ToHtmlStringRGBA(AssertColor),
-                _ => ColorUtility.ToHtmlStringRGBA(NormalColor)
-            };
-        }
     }
 }

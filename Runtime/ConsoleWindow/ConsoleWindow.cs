@@ -6,7 +6,7 @@ using TMPro;
 
 namespace CG.Console
 {
-    [AddComponentMenu("ContradictiveGames/Console/Console Window")]
+    [AddComponentMenu(Globals.k_PACKAGE_NAME + "/Console Window")]
     public class ConsoleWindow : MonoBehaviour
     {
         public static ConsoleWindow Instance { get; private set; }
@@ -92,23 +92,6 @@ namespace CG.Console
         #endregion
 
 
-        #region Validation
-
-#if UNITY_EDITOR
-        protected virtual void OnValidate()
-        {
-            if(consoleInput == null) Debug.LogWarning($"We currently do not have any input field added to the Developer Console", this);
-            if(consoleOutputPrefab == null) Debug.LogWarning($"We currently do not have any console output prefab created within the inspector. One will be created by default but it is recommended to make one yourself", this);
-            if(consoleOutputContainer == null) Debug.LogError($"We currently do not have a parent container for console output", this);
-            if(scrollRect == null) Debug.LogWarning($"We currently do not have a scroll rect set for the console", this);
-            if(autoCompleteEnabled && autoCompletePopup == null) Debug.LogWarning("We have enabled auto-complete but we don't have anything to display our command auto-completion", this);
-            if(autoCompleteEnabled && autoCompleteText == null) Debug.LogWarning("We have enabled auto-complete but we don't have a text component setup to display our command auto-completes", this);
-        }
-#endif
-
-        #endregion
-
-
         #region LogHandling
 
         protected virtual void CreateConsoleOutput(string message, string stackTrace = "", LogType type = LogType.Log)
@@ -119,7 +102,7 @@ namespace CG.Console
             }
 
             TMP_Text output = Instantiate(consoleOutputPrefab, consoleOutputContainer);
-            string log = $"<color=#{Settings.GetLogColorByLogType(type)}>[{DateTime.Now.ToString("HH:mm:ss")}]: {message} {(Settings.ShowStackTrace ? $"Stack Trace: {stackTrace}" : "")}</color>";
+            string log = $"<color=#{Settings.GetLogColorByLogType(type)}>[{DateTime.Now:HH:mm:ss}]: {message} {(Settings.ShowStackTrace ? $"Stack Trace: {stackTrace}" : "")}</color>";
 
             output.SetText(log);
 
@@ -137,7 +120,10 @@ namespace CG.Console
             CommandResponse response = ConsoleCommands.TryExecute(input);
             if(Settings.ShowCommandResponseLogs && !String.IsNullOrWhiteSpace(response.Message)) 
             {
-                CreateConsoleOutput(response.Message, "", response.ResponseType != ResponseType.Success ? LogType.Error : LogType.Assert);
+                CreateConsoleOutput(response.Message, type: response.ResponseType != ResponseType.Success 
+                    ? LogType.Error 
+                    : LogType.Assert
+                );
             }
 
             if(response.ResponseType == ResponseType.Success)

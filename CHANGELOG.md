@@ -1,5 +1,27 @@
 # CG Console Changelog
 
+## [v0.8.0] - 2026, Oct. 12
+
+This release is mostly a simplification of previous class naming. Because this will break any older version Public API, this is being bumped to a higher version. There has also be a few upgrades.
+
+### Features
+
+- X
+
+### Fixes/Improvements
+
+- Package no longer imports documentation pictures
+- Fix sample package errors
+- Samples no longer required
+- Simplify names from ContradictiveGames.CGConsole -> CG.Console
+- Update README to use new names
+
+### Misc. Changes
+
+- Changed version naming to be more standardized
+- Add gitattributes, gitignore, .github folder
+- Add bug report template
+
 
 ## [v0.7.260105] - 01-05-2026
 
@@ -31,7 +53,6 @@ This release focuses primarily on being able to customize CGConsole to your need
 - Update documentation to fit new release
 
 
-
 ## [v0.6.251230] - 12-30-2025
 
 This marks the second release of CGConsole.
@@ -56,6 +77,7 @@ This marks the second release of CGConsole.
 - `ConsoleCommandRegistry` renamed to `CGConsoleCommands`
 - Root namespace change to `CG.Console` from `CGConsole`
 - The `Console` class is no longer an abstract, and is a concrete MonoBehavior that can be added to any GameObject within the game
+
 
 ## [v0.5] - 12-29-2025
 

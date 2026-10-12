@@ -5,8 +5,6 @@ namespace CG.Console
 {
     public sealed class DefaultCommands : ICommandProvider
     {
-
-
         #region Load Level
 
         [ConsoleCmd("load", "Load a level by name")]
