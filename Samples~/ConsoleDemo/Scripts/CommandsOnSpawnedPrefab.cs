@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ContradictiveGames.CGConsole
+namespace CG.Console
 {
     public class CommandsOnSpawnedPrefab : MonoBehaviour, ICommandProvider
     {
@@ -20,7 +20,7 @@ namespace ContradictiveGames.CGConsole
      
         public void RegisterCommands()
         {
-            CGConsoleCommands.RegisterCommandsFrom(this);
+            ConsoleCommands.RegisterCommandsFrom(this);
         }
     
     }

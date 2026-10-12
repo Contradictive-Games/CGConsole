@@ -54,7 +54,7 @@ This marks the second release of CGConsole.
 ### Misc. Changes
 
 - `ConsoleCommandRegistry` renamed to `CGConsoleCommands`
-- Root namespace change to `ContradictiveGames.CGConsole` from `CGConsole`
+- Root namespace change to `CG.Console` from `CGConsole`
 - The `Console` class is no longer an abstract, and is a concrete MonoBehavior that can be added to any GameObject within the game
 
 ## [v0.5] - 12-29-2025

@@ -2,9 +2,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-namespace ContradictiveGames.CGConsole
+namespace CG.Console
 {
-    public sealed class ExampleConsoleWindow : CGConsoleWindow
+    public sealed class ExampleConsoleWindow : ConsoleWindow
     {
         
         [Header("Settings")]

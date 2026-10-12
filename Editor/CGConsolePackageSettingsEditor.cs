@@ -2,10 +2,10 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace ContradictiveGames.CGConsole.Editor
+namespace CG.Console.Editor
 {
-    [CustomEditor(typeof(CGConsolePackageSettings))]
-    internal sealed class CGConsolePackageSettingsEditor : UnityEditor.Editor
+    [CustomEditor(typeof(ConsolePackageSettings))]
+    internal sealed class ConsolePackageSettingsEditor : UnityEditor.Editor
     {
         private SerializedProperty enableLogging;
         private SerializedProperty defaultCommands;
@@ -118,7 +118,7 @@ namespace ContradictiveGames.CGConsole.Editor
                     "Are you sure you want to reset all settings to their default values?",
                     "Reset", "Cancel"))
                 {
-                    (target as CGConsolePackageSettings)?.ResetToDefaults();
+                    (target as ConsolePackageSettings)?.ResetToDefaults();
                     EditorUtility.SetDirty(target);
                 }
             }

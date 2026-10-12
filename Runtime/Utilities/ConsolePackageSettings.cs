@@ -1,13 +1,13 @@
 using System;
 using UnityEngine;
 
-namespace ContradictiveGames.CGConsole
+namespace CG.Console
 {
     [Serializable]
-    public sealed class DefaultCommandSetting
+    public struct DefaultCommandSetting
     {
         public string CommandName;
-        public bool Enabled = true;
+        public bool Enabled;
 
         public DefaultCommandSetting(string name, bool enabled = true)
         {
@@ -15,11 +15,12 @@ namespace ContradictiveGames.CGConsole
             Enabled = enabled;
         }
     }
+    
 
-    [CreateAssetMenu(fileName = "CGConsole Package Settings", menuName = "Contradictive Games/CGConsole/Package Settings")]
-    public sealed class CGConsolePackageSettings : ScriptableObject
+    [CreateAssetMenu(fileName = "Console Package Settings", menuName = "Contradictive Games/Console/Package Settings")]
+    public sealed class ConsolePackageSettings : ScriptableObject
     {
-        public const string k_PackageSettingsPath = "Assets/Resources/CGConsole/CGConsolePackageSettings.asset";
+        public const string k_PackageSettingsPath = "Assets/Resources/Console/ConsolePackageSettings.asset";
 
 
         [Header("Logging")]
@@ -53,29 +54,29 @@ namespace ContradictiveGames.CGConsole
         };
 
 
-        public static CGConsolePackageSettings GetOrCreateSettings()
+        public static ConsolePackageSettings GetOrCreateSettings()
         {
-            CGConsolePackageSettings settings = null;
+            ConsolePackageSettings settings = null;
 
 #if UNITY_EDITOR
-            settings = UnityEditor.AssetDatabase.LoadAssetAtPath<CGConsolePackageSettings>(Utilities.k_SettingsAssetPath);
+            settings = UnityEditor.AssetDatabase.LoadAssetAtPath<ConsolePackageSettings>(Globals.k_SettingsAssetPath);
             
             if(settings == null)
             {
-                settings = ScriptableObject.CreateInstance<CGConsolePackageSettings>();
+                settings = ScriptableObject.CreateInstance<ConsolePackageSettings>();
                 if(settings == null)
                 {
-                    if (!System.IO.Directory.Exists(Utilities.k_SettingsAssetDirectory))
+                    if (!System.IO.Directory.Exists(Globals.k_SettingsAssetDirectory))
                     {
-                        System.IO.Directory.CreateDirectory(Utilities.k_SettingsAssetDirectory);
+                        System.IO.Directory.CreateDirectory(Globals.k_SettingsAssetDirectory);
                     }
                     settings.ResetToDefaults();
-                    UnityEditor.AssetDatabase.CreateAsset(settings, Utilities.k_SettingsAssetPath);
+                    UnityEditor.AssetDatabase.CreateAsset(settings, Globals.k_SettingsAssetPath);
                     UnityEditor.AssetDatabase.SaveAssets();
                 }
             }
 #else
-            settings = Resources.Load<CGConsolePackageSettings>(Utilities.k_SettingsResourcePath);
+            settings = Resources.Load<ConsolePackageSettings>(Globals.k_SettingsResourcePath);
 #endif
             return settings;
         }
@@ -103,7 +104,7 @@ namespace ContradictiveGames.CGConsole
             EnableLoggingForCommandRegistration = false;
             RequireInterfaceForRegistration = true;
             UseCustomRegexForCommandNaming = false;
-            Regex = Utilities.k_DefaultCommandNameRegex;
+            Regex = Globals.k_DefaultCommandNameRegex;
             DefaultCommands = new DefaultCommandSetting[]
             {
                 new DefaultCommandSetting("help", true),

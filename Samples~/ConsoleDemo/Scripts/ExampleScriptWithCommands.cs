@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ContradictiveGames.CGConsole
+namespace CG.Console
 {
     public class ExampleScriptWithCommands : MonoBehaviour, ICommandProvider
     {

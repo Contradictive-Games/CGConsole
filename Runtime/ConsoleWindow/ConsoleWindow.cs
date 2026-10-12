@@ -4,12 +4,12 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-namespace ContradictiveGames.CGConsole
+namespace CG.Console
 {
-    [AddComponentMenu("ContradictiveGames/CGConsole/CGConsole Window")]
-    public class CGConsoleWindow : MonoBehaviour
+    [AddComponentMenu("ContradictiveGames/Console/Console Window")]
+    public class ConsoleWindow : MonoBehaviour
     {
-        public static CGConsoleWindow Instance { get; private set; }
+        public static ConsoleWindow Instance { get; private set; }
 
         [Header("Console Components")]
         [SerializeField] private TMP_InputField consoleInput;
@@ -23,7 +23,7 @@ namespace ContradictiveGames.CGConsole
         [SerializeField] private TMP_Text autoCompleteText;
 
         [Header("Settings")]
-        public CGConsoleWindowSettings Settings;
+        public ConsoleWindowSettings Settings;
 
 
         #region Enable/Disable
@@ -88,7 +88,7 @@ namespace ContradictiveGames.CGConsole
 
         protected virtual void Start()
         {
-            CGConsoleCommands.RegisterAllCommands();
+            ConsoleCommands.RegisterAllCommands();
         }
 
 
@@ -139,7 +139,7 @@ namespace ContradictiveGames.CGConsole
 
         protected virtual void OnCommandSubmitted(string input)
         {
-            CommandResponse response = CGConsoleCommands.TryExecute(input);
+            CommandResponse response = ConsoleCommands.TryExecute(input);
             if(Settings.ShowCommandResponseLogs && !String.IsNullOrWhiteSpace(response.Message)) 
             {
                 CreateConsoleOutput(response.Message, "", response.ResponseType != ResponseType.Success ? LogType.Error : LogType.Assert);
@@ -162,7 +162,7 @@ namespace ContradictiveGames.CGConsole
                 return;
             }
             
-            HashSet<string> commands = CGConsoleCommands.GetCommandAutoComplete(input);
+            HashSet<string> commands = ConsoleCommands.GetCommandAutoComplete(input);
             if(commands.Count == 0) {
                 autoCompletePopup.SetActive(false);
                 autoCompleteText.SetText("");

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace ContradictiveGames.CGConsole
+namespace CG.Console
 {
     public class ExampleCommandExecutor : MonoBehaviour
     {
@@ -19,18 +19,18 @@ namespace ContradictiveGames.CGConsole
                     delegate { LogAStatementFromASpawnedPrefab(); }
                 );
             }
-            if (LogWarningButton != null) LogWarningButton.onClick.AddListener(() => CGConsoleCommands.TryExecute("log_warning"));
-            if (LogErrorButton != null) LogErrorButton.onClick.AddListener(() => CGConsoleCommands.TryExecute("log_error"));
+            if (LogWarningButton != null) LogWarningButton.onClick.AddListener(() => ConsoleCommands.TryExecute("log_warning"));
+            if (LogErrorButton != null) LogErrorButton.onClick.AddListener(() => ConsoleCommands.TryExecute("log_error"));
         }
 
         public void LogStatementButtonPress()
         {
-            CGConsoleCommands.TryExecute("log_nice");
+            ConsoleCommands.TryExecute("log_nice");
         }
 
         public void LogNumberFiveButtonPress()
         {
-            CGConsoleCommands.TryExecute("log_number 5");
+            ConsoleCommands.TryExecute("log_number 5");
         }
 
 
@@ -42,7 +42,7 @@ namespace ContradictiveGames.CGConsole
 
         private void LogAStatementFromASpawnedPrefab()
         {
-            CGConsoleCommands.TryExecute("order_66");
+            ConsoleCommands.TryExecute("order_66");
         }
         
     }

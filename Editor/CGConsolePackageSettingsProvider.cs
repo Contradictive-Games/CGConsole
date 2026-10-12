@@ -4,21 +4,21 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using System.IO;
 
-namespace ContradictiveGames.CGConsole.Editor
+namespace CG.Console.Editor
 {
-    internal class CGConsoleSettingsProvider : SettingsProvider
+    internal class ConsoleSettingsProvider : SettingsProvider
     {
         private SerializedObject serializedSettings;
         private UnityEditor.Editor editor;
-        private CGConsolePackageSettings settingsAsset;
+        private ConsolePackageSettings settingsAsset;
         
         
-        public CGConsoleSettingsProvider(string path, SettingsScope scopes = SettingsScope.Project)
+        public ConsoleSettingsProvider(string path, SettingsScope scopes = SettingsScope.Project)
             : base(path, scopes) { }
         
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
-            settingsAsset = AssetDatabase.LoadAssetAtPath<CGConsolePackageSettings>(Utilities.k_SettingsAssetPath);
+            settingsAsset = AssetDatabase.LoadAssetAtPath<ConsolePackageSettings>(Utilities.k_SettingsAssetPath);
             
             if (settingsAsset != null)
             {
@@ -55,7 +55,7 @@ namespace ContradictiveGames.CGConsole.Editor
             
             EditorGUILayout.Space(5);
             EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.ObjectField("Settings Asset", settingsAsset, typeof(CGConsolePackageSettings), false);
+            EditorGUILayout.ObjectField("Settings Asset", settingsAsset, typeof(ConsolePackageSettings), false);
             EditorGUI.EndDisabledGroup();
             EditorGUILayout.Space(10);
             
@@ -80,10 +80,10 @@ namespace ContradictiveGames.CGConsole.Editor
                 AssetDatabase.Refresh();
             }
             
-            var newSettings = ScriptableObject.CreateInstance<CGConsolePackageSettings>();
+            var newSettings = ScriptableObject.CreateInstance<ConsolePackageSettings>();
             newSettings.ResetToDefaults();
             
-            AssetDatabase.CreateAsset(newSettings, Utilities.k_SettingsAssetDirectory + "/CGConsolePackageSettings.asset");
+            AssetDatabase.CreateAsset(newSettings, Utilities.k_SettingsAssetDirectory + "/ConsolePackageSettings.asset");
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             
@@ -98,11 +98,11 @@ namespace ContradictiveGames.CGConsole.Editor
         }
         
         [SettingsProvider]
-        public static SettingsProvider CreateCGConsoleSettingsProvider()
+        public static SettingsProvider CreateConsoleSettingsProvider()
         {
-            var provider = new CGConsoleSettingsProvider("Project/CG Console", SettingsScope.Project)
+            var provider = new ConsoleSettingsProvider("Project/CG Console", SettingsScope.Project)
             {
-                keywords = new[] { "Console", "CG", "ContradictiveGames", "Contradictive", "Command", "Debug", "CGConsole", "Logging" }
+                keywords = new[] { "Console", "CG", "ContradictiveGames", "Contradictive", "Command", "Debug", "Console", "Logging" }
             };
             return provider;
         }

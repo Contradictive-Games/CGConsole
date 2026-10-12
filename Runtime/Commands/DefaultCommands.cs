@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace ContradictiveGames.CGConsole
+namespace CG.Console
 {
     public sealed class DefaultCommands : ICommandProvider
     {

@@ -4,28 +4,54 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
-namespace ContradictiveGames.CGConsole
+namespace CG.Console
 {
-    public static class CGConsoleCommands
+    public static class ConsoleCommands
     {
+        internal readonly struct ConsoleCommand
+        {
+            internal readonly string Command;
+            internal readonly string Description;
+            internal readonly bool HideFromAutoComplete;
+            internal readonly bool HideFromHelpCommand;
+            internal readonly MethodInfo MethodToExecute;
+            internal readonly ParameterInfo[] Parameters;
+            internal readonly object Target;
+
+            internal ConsoleCommand(string command, string description, bool hideFromAutoComplete, bool hideFromHelpCommand, 
+                MethodInfo methodToExecute, ParameterInfo[] parameters, object target)
+            {
+                Command = command;
+                Description = description;
+                HideFromAutoComplete = hideFromAutoComplete;
+                HideFromHelpCommand = hideFromHelpCommand;
+                MethodToExecute = methodToExecute;
+                Parameters = parameters;
+                Target = target;
+            }
+        }
+
+
         private static readonly Dictionary<string, ConsoleCommand> allCommands = new();
         private readonly static HashSet<string> commandNameList = new();
         private static DefaultCommands defaultCommandsInstance;
-        private static CGConsolePackageSettings settings { 
+        private static ConsolePackageSettings settings
+        {
             get
             {
-                if(_settings == null) _settings = CGConsolePackageSettings.GetOrCreateSettings();
+                if (_settings == null) _settings = ConsolePackageSettings.GetOrCreateSettings();
                 return _settings;
-        }}
+            }
+        }
 
-        private static CGConsolePackageSettings _settings;
+        private static ConsolePackageSettings _settings;
 
         private static string commandHelpString;
-        
+
         private static bool registeredDefaultCommands = false;
 
-        #region Command Registration
 
+        #region Command Registration
 
         public static void RegisterAllCommands(bool mustBeCommandProvider = true)
         {
@@ -34,17 +60,17 @@ namespace ContradictiveGames.CGConsole
 #else
             MonoBehaviour[] objects = GameObject.FindObjectsOfType<MonoBehaviour>();
 #endif
-            
+
             bool requireInterface = settings.RequireInterfaceForRegistration || mustBeCommandProvider;
             foreach (var obj in objects)
             {
-                if(requireInterface && obj is not ICommandProvider) continue;
-                
+                if (requireInterface && obj is not ICommandProvider) continue;
+
                 RegisterCommandsFrom(obj);
             }
-            
-            if(
-                settings != null && 
+
+            if (
+                settings != null &&
                 settings.EnableLoggingForCommandRegistration
             )
             {
@@ -56,12 +82,12 @@ namespace ContradictiveGames.CGConsole
         public static void RegisterCommandsFrom(object target)
         {
             bool requireInterface = false;
-            if(settings != null)
+            if (settings != null)
             {
                 requireInterface = settings.RequireInterfaceForRegistration;
             }
 
-            if(requireInterface && target is not ICommandProvider) return;
+            if (requireInterface && target is not ICommandProvider) return;
 
 
             var methods = target.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
@@ -70,24 +96,24 @@ namespace ContradictiveGames.CGConsole
             foreach (var method in methods)
             {
                 var attr = method.GetCustomAttribute<ConsoleCmdAttribute>();
-                if(attr == null) continue;
-                
+                if (attr == null) continue;
+
                 cmdName = attr.CommandName;
 
-                if(!CommandIsValid(cmdName)) continue;
-                
-                
+                if (!CommandIsValid(cmdName)) continue;
+
+
                 AddNewConsoleCommand(cmdName, attr, method, target);
 
-                if(!attr.HideFromAutoComplete) commandNameList.Add(cmdName);
-                
+                if (!attr.HideFromAutoComplete) commandNameList.Add(cmdName);
+
             }
 
-            if(
-                settings != null && 
+            if (
+                settings != null &&
                 settings.EnableLoggingForCommandRegistration)
             {
-                
+
                 Debug.Log($"(CG Console) Registered `{cmdName}` command from {target}");
             }
 
@@ -99,14 +125,14 @@ namespace ContradictiveGames.CGConsole
 
         private static void RegisterCommandsFromSelectively(object target)
         {
-            if(settings == null) return;
+            if (settings == null) return;
 
             var methods = target.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             int registeredCount = 0;
-            foreach(var method in methods)
+            foreach (var method in methods)
             {
                 var attr = method.GetCustomAttribute<ConsoleCmdAttribute>();
-                if(attr == null) continue;
+                if (attr == null) continue;
 
                 string cmdName = attr.CommandName;
 
@@ -115,18 +141,17 @@ namespace ContradictiveGames.CGConsole
 
                 AddNewConsoleCommand(cmdName, attr, method, target);
 
-                if(!attr.HideFromAutoComplete) commandNameList.Add(cmdName);
+                if (!attr.HideFromAutoComplete) commandNameList.Add(cmdName);
                 registeredCount++;
             }
 
-            if(registeredCount > 0 && settings.EnableLoggingForCommandRegistration) Debug.Log($"Successfully registered {registeredCount} default commands");
+            if (registeredCount > 0 && settings.EnableLoggingForCommandRegistration) Debug.Log($"Successfully registered {registeredCount} default commands");
         }
-
 
         #endregion
 
-        #region Command Execution
 
+        #region Command Execution
 
         public static CommandResponse TryExecute(string input)
         {
@@ -141,7 +166,7 @@ namespace ContradictiveGames.CGConsole
             {
                 return LogCommandHelp(cmd.Remove(cmd.Length - 1));
             }
-            
+
             if (!allCommands.TryGetValue(cmd, out ConsoleCommand command))
             {
                 return new CommandResponse(ResponseType.Error, $"Command `{cmd}` was not found, or was not registered properly");
@@ -177,16 +202,15 @@ namespace ContradictiveGames.CGConsole
         }
 
 
-
         private static CommandResponse LogCommandHelp(string command)
         {
-            if(allCommands.TryGetValue(command, out ConsoleCommand cmd))
+            if (allCommands.TryGetValue(command, out ConsoleCommand cmd))
             {
                 string parameters = "Args: ";
-                if(cmd.Parameters.Length == 0) parameters += "No args required";
+                if (cmd.Parameters.Length == 0) parameters += "No args required";
                 else
                 {
-                    foreach(var param in cmd.Parameters)
+                    foreach (var param in cmd.Parameters)
                     {
                         parameters += param.ParameterType + " ";
                     }
@@ -197,28 +221,27 @@ namespace ContradictiveGames.CGConsole
             return new CommandResponse(ResponseType.Invalid, $"No command found by name: `{command}`");
         }
 
-
         #endregion
+
 
         #region Default Commands
 
-
         private static void RegisterDefaultCommands()
         {
-            if(registeredDefaultCommands) return;
+            if (registeredDefaultCommands) return;
 
             bool registerAll = settings == null;
 
             if (registerAll || settings.IsCommandEnabled("help"))
             {
                 allCommands.Add(
-                    "help", 
+                    "help",
                     new ConsoleCommand(
-                        "help", 
-                        "List all available console commands", 
+                        "help",
+                        "List all available console commands",
                         hideFromAutoComplete: true,
                         hideFromHelpCommand: true,
-                        typeof(CGConsoleCommands).GetMethod(nameof(ShowHelp), BindingFlags.Static | BindingFlags.NonPublic), 
+                        typeof(ConsoleCommands).GetMethod(nameof(ShowHelp), BindingFlags.Static | BindingFlags.NonPublic),
                         new ParameterInfo[0],
                         null
                 ));
@@ -230,7 +253,7 @@ namespace ContradictiveGames.CGConsole
             registeredDefaultCommands = true;
         }
 
-        
+
         private static void ShowHelp()
         {
             Debug.Log(commandHelpString);
@@ -239,13 +262,13 @@ namespace ContradictiveGames.CGConsole
 
         #endregion
 
-        #region Utilities
 
+        #region Utilities
 
         private static ConsoleCommand AddNewConsoleCommand(string cmdName, ConsoleCmdAttribute attr, MethodInfo method, object target)
         {
             ParameterInfo[] @params = method.GetParameters();
-            
+
             ConsoleCommand cmd = new ConsoleCommand
             (
                 cmdName,
@@ -266,14 +289,14 @@ namespace ContradictiveGames.CGConsole
         {
             cmdName.ToLower().Trim();
 
-            if(settings == null) return true; 
+            if (settings == null) return true;
 
-            if(!Regex.IsMatch(cmdName, settings.Regex))
+            if (!Regex.IsMatch(cmdName, settings.Regex))
             {
                 Debug.LogError($"Received invalid command format. Please remove special characters (excluding underscores). Cmd: {cmdName}");
                 return false;
             }
-            if(allCommands.ContainsKey(cmdName))
+            if (allCommands.ContainsKey(cmdName))
             {
                 if (settings != null && settings.EnableLoggingForCommandRegistration) Debug.LogError($"Command `{cmdName}` has already been registered.");
                 return false;
@@ -287,9 +310,9 @@ namespace ContradictiveGames.CGConsole
         {
             HashSet<string> commands = new();
 
-            foreach(String s in commandNameList)
+            foreach (String s in commandNameList)
             {
-                if(s.Contains(input)) commands.Add(s);
+                if (s.Contains(input)) commands.Add(s);
             }
 
             return commands;
@@ -301,13 +324,12 @@ namespace ContradictiveGames.CGConsole
             string response = "Commands List: \n";
             foreach (var (_, cmd) in allCommands)
             {
-                if(cmd.HideFromHelpCommand) continue;
+                if (cmd.HideFromHelpCommand) continue;
                 response += $"{cmd.Command}" + (!String.IsNullOrWhiteSpace(cmd.Description) ? "     (" + cmd.Description + ")" : "") + "\n";
             }
             commandHelpString = response;
 
         }
-
 
         #endregion
 

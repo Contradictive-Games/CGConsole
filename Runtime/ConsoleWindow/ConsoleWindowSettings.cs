@@ -1,9 +1,9 @@
 using UnityEngine;
 
-namespace ContradictiveGames.CGConsole
+namespace CG.Console
 {
-    [CreateAssetMenu(fileName = "Console Window Settings Settings", menuName = "Contradictive Games/CGConsole/CGConsole Window Settings")]
-    public class CGConsoleWindowSettings : ScriptableObject
+    [CreateAssetMenu(fileName = "Console Window Settings Settings", menuName = "Contradictive Games/Console/Console Window Settings")]
+    public class ConsoleWindowSettings : ScriptableObject
     {
         [Header("Input Field")]
         public Color InputFieldBackgroundColor = Color.white;
