@@ -1,6 +1,6 @@
 {
-    "name": "ContradictiveGames.CGConsole",
-    "rootNamespace": "ContradictiveGames.CGConsole",
+    "name": "CG.Console",
+    "rootNamespace": "CG.Console",
     "references": [
         "UnityEngine.UI",
         "Unity.TextMeshPro"

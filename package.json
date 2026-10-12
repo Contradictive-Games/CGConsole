@@ -11,8 +11,8 @@
         "url": "https://www.contradictivegames.com"
     },
     "samples": [{
-        "displayName": "CGConsole Demo",
+        "displayName": "Console Demo",
         "description": "Demo assets for the console",
-        "path": "Samples/CGConsoleDemo"
+        "path": "Samples~/Console Demo"
     }]
 }
