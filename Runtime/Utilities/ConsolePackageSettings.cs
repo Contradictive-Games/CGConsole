@@ -1,6 +1,9 @@
 using System;
 using UnityEditor;
+
+#if UNITY_EDITOR
 using UnityEngine;
+#endif
 
 namespace CG.Console
 {
@@ -59,16 +62,15 @@ namespace CG.Console
 #if UNITY_EDITOR
             settings = AssetDatabase.LoadAssetAtPath<ConsolePackageSettings>(Globals.k_SettingsAssetPath);
 
-            if (settings == null)
+            if(settings == null)
             {
-                settings = ScriptableObject.CreateInstance<ConsolePackageSettings>();
-                if (settings != null)
-                {
-                    string guid = AssetDatabase.CreateFolder("Assets/Resources/", Globals.k_PACKAGE_NAME);
-                    settings.ResetToDefaults();
-                    AssetDatabase.CreateAsset(settings, Globals.k_SettingsAssetPath);
-                    AssetDatabase.SaveAssets();
-                }
+                if(!AssetDatabase.IsValidFolder("Assets/Resources")) AssetDatabase.CreateFolder("Assets", "Resources");
+                if(!AssetDatabase.IsValidFolder(Globals.k_SettingsAssetDirectory)) AssetDatabase.CreateFolder("Assets/Resources", Globals.k_PACKAGE_NAME);
+
+                settings = CreateInstance<ConsolePackageSettings>();
+                settings.ResetToDefaults();
+                AssetDatabase.CreateAsset(settings, Globals.k_SettingsAssetPath);
+                AssetDatabase.SaveAssets();
             }
 #else
             settings = Resources.Load<ConsolePackageSettings>(Globals.k_SettingsResourcePath);

@@ -98,7 +98,7 @@ namespace CG.Console
 
         private void CreateConsoleOutput(string message, string stackTrace = "", LogType type = LogType.Log)
         {
-            if (consoleOutputContainer.childCount >= (Settings?.MaxLines ?? Globals.k_MaxConsoleLogs))
+            if (consoleOutputContainer.childCount >= (Settings?.MaxLines ?? Globals.k_MaxConsoleWindowLines))
             {
                 Destroy(consoleOutputContainer.GetChild(0).gameObject);
             }
