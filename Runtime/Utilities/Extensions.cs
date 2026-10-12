@@ -4,7 +4,7 @@ namespace CG.Console
 {
     internal static class Extensions
     {
-        public static string GetLogColorByLogType(this ConsoleWindowSettings settings, LogType type)
+        internal static string GetLogColorByLogType(this ConsoleWindowSettings settings, LogType type)
         {
             return type switch
             {
@@ -16,5 +16,13 @@ namespace CG.Console
                 _ => ColorUtility.ToHtmlStringRGBA(settings.NormalColor)
             };
         }
+
+        internal static LogType ToLogType(this ResponseType type) => type switch
+        {
+            ResponseType.Success => LogType.Assert,
+            ResponseType.Info => LogType.Log,
+            ResponseType.Invalid => LogType.Warning,
+            _ => LogType.Error
+        };
     }
 }

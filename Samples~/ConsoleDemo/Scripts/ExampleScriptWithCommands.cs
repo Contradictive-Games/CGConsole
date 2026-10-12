@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace CG.Console
 {
-    public class ExampleScriptWithCommands : MonoBehaviour, ICommandProvider
+    internal sealed class ExampleScriptWithCommands : MonoBehaviour, ICommandProvider
     {
         private void Awake() => Debug.Log("Hello from Awake!", this);
         

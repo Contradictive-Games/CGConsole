@@ -1,6 +1,6 @@
 namespace CG.Console
 {
-    public enum CommandTarget { Frist, All, Select }
+    public enum CommandTarget { First, All, Select }
 
     [System.AttributeUsage(System.AttributeTargets.Method)]
     public sealed class ConsoleCmdAttribute : System.Attribute

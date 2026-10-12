@@ -18,13 +18,6 @@ This will of course not work with a custom made console, and only work with the 
 
 ## Installation
 
-### Install via .unitypackage
-
-Download any version from releases.
-
-[Click Here to go to Releases Page (https://github.com/Contradictive-Games/RGS-CGConsole/releases)](https://github.com/Contradictive-Games/RGS-CGConsole/releases)
-
-Then either drag the `.unitypackage` file into your project folder, or open the PackageManager window and click the `+` sign to add from disk and select the downloaded file.
 
 ### Install via git URL
 
@@ -46,7 +39,7 @@ To access the settings, in the toolbar you will need to select `Edit/Project Set
 
 The window will look like:
 
-![project settings window](ConsoleSettings.png "Package Settings Window")
+![project settings window](Documentation~/images/settingswindow.png "Package Settings Window")
 
 
 Default package settings and what they do:
@@ -244,21 +237,24 @@ Additionally, if you'd like to create your own settings - you must inherit the `
 
 
 
-## FAQ
+## Known Limitations
 
-### What Types Are Supported For the Command's Args?
-
-Console Commands really only work with supporting basic types like `string`, `int`, `float`, and `bool`
-
+- Console Commands currently do not support more complex data types like `struct`, `Vector3`, `Vector2`, etc (in roadmap)
+- Console output is currently creating/destroying output log objects, instead of pooling (in roadmap)
 
 
 
-## Stretch
+## Roadmap
 
 Features that are not currently in this package, but I would eventually like to add
 
 - [ ] Support structs as console command arguments
-- [ ] Support gathering commands automatically, rather than manual registration
+- [X] Support gathering commands automatically, rather than manual registration
 - [ ] Add auto-complete when typing a command in Console input field
     - [X] Add suggestion box when typing a command for possible command inputs
+    - [ ] Pressing `Tab` auto fills in first suggestion
+    - [ ] Users can cycle through options in suggestion box with Up/Down arrow keys
 - [x] Support non-MonoBehavior classes being able to utilize commands
+- [ ] Console window resizing/dragging
+- [ ] Dev build only console commands
+- [ ] Pool console output logs

@@ -213,7 +213,7 @@ namespace CG.Console
                 }
             }
 
-            if (cmd.TargetMode == CommandTarget.Frist && results.Count > 1) results.RemoveRange(1, results.Count - 1);
+            if (cmd.TargetMode == CommandTarget.First && results.Count > 1) results.RemoveRange(1, results.Count - 1);
 
             return results.Count > 0;
         }
@@ -287,10 +287,10 @@ namespace CG.Console
             {
                 return new CommandResponse(ResponseType.Invalid, $"No command found by name `{name}`");
             }
-
+            
             string args = cmd.Parameters.Length == 0
                 ? "No args required"
-                : string.Join(" ", cmd.Parameters.Select(p => $"<{p.ParameterType.Name}{p.Name}"));
+                : string.Join(" ", cmd.Parameters.Select(p => $"<{p.ParameterType.Name} {p.Name}>"));
 
             string description = string.IsNullOrWhiteSpace(cmd.Description)
                 ? "No description provided"

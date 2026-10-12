@@ -123,20 +123,13 @@ namespace CG.Console
 
         #region InputField Handling
 
-        private static LogType ToLogType(ResponseType type) => type switch
-        {
-            ResponseType.Success => LogType.Assert,
-            ResponseType.Info => LogType.Log,
-            ResponseType.Invalid => LogType.Warning,
-            _ => LogType.Error
-        };
 
         private void OnCommandSubmitted(string input)
         {
             CommandResponse response = ConsoleCommands.TryExecute(input);
             if(Settings.ShowCommandResponseLogs && !String.IsNullOrWhiteSpace(response.Message)) 
             {
-                CreateConsoleOutput(response.Message, type: ToLogType(response.ResponseType));
+                CreateConsoleOutput(response.Message, type: response.ResponseType.ToLogType());
             }
 
             if(response.ResponseType == ResponseType.Success)

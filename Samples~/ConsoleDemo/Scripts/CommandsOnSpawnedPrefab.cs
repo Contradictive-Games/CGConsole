@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace CG.Console
 {
-    public class CommandsOnSpawnedPrefab : MonoBehaviour, ICommandProvider
+    internal sealed class CommandsOnSpawnedPrefab : MonoBehaviour, ICommandProvider
     {
         private void OnEnable()
         {
@@ -15,12 +15,5 @@ namespace CG.Console
         {
             Debug.Log("We have executed Order 66.");
         }
-     
-     
-        public void RegisterCommands()
-        {
-            ConsoleCommands.RegisterCommandsFrom(this);
-        }
-    
     }
 }

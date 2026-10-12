@@ -40,19 +40,7 @@ namespace CG.Console
         [Header("Default Commands")]
         [Tooltip("You can toggle which of the default commands you would like added")]
         [SerializeField]
-        private DefaultCommandSetting[] DefaultCommands = new DefaultCommandSetting[]
-        {
-            new DefaultCommandSetting("help", true),
-            new DefaultCommandSetting("clear", true),
-            new DefaultCommandSetting("quit", true),
-            new DefaultCommandSetting("load", true),
-            new DefaultCommandSetting("set_intkey", true),
-            new DefaultCommandSetting("set_floatkey", true),
-            new DefaultCommandSetting("set_stringkey", true),
-            new DefaultCommandSetting("get_intkey", true),
-            new DefaultCommandSetting("get_floatkey", true),
-            new DefaultCommandSetting("get_stringkey", true),
-        };
+        private DefaultCommandSetting[] DefaultCommands = CreateDefaulstList();
 
 
         public static ConsolePackageSettings GetOrCreateSettings()
@@ -104,7 +92,12 @@ namespace CG.Console
             RequireInterfaceForRegistration = true;
             UseCustomRegexForCommandNaming = false;
             Regex = Globals.k_DefaultCommandNameRegex;
-            DefaultCommands = new DefaultCommandSetting[]
+            DefaultCommands = CreateDefaulstList();
+        }
+
+        internal static DefaultCommandSetting[] CreateDefaulstList()
+        {
+            return new DefaultCommandSetting[]
             {
                 new DefaultCommandSetting("help", true),
                 new DefaultCommandSetting("clear", true),

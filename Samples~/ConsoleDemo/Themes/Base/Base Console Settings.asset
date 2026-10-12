@@ -12,16 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4cebf3a7b436eff4f8ac9003c5a50351, type: 3}
   m_Name: Base Console Settings
   m_EditorClassIdentifier: CGConsole::CGConsole.ConsoleSettings
-  TopBarColor: {r: 0, g: 0.41509432, b: 0.3591516, a: 1}
-  TitleTitleColor: {r: 1, g: 1, b: 1, a: 1}
-  BackgroundColor: {r: 0.066037714, g: 0.066037714, b: 0.066037714, a: 1}
   InputFieldBackgroundColor: {r: 1, g: 1, b: 1, a: 1}
   InputTextColor: {r: 0, g: 0, b: 0, a: 1}
   PlaceHolderTextColor: {r: 0, g: 0, b: 0, a: 1}
-  ScrollbarHandleColor: {r: 1, g: 1, b: 1, a: 1}
-  ScrollbarBackgroundColor: {r: 0.21960786, g: 0.21960786, b: 0.21960786, a: 1}
-  NormalTextColor: {r: 1, g: 1, b: 1, a: 1}
-  SuccessTextColor: {r: 0, g: 1, b: 0, a: 1}
-  WarningTextColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
-  ErrorTextColor: {r: 1, g: 0, b: 0, a: 1}
+  TextSize: 16
+  NormalColor: {r: 1, g: 1, b: 1, a: 1}
+  AssertColor: {r: 0, g: 1, b: 0, a: 1}
+  WarningColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  ErrorColor: {r: 1, g: 0, b: 0, a: 1}
+  ExceptionColor: {r: 1, g: 0, b: 0, a: 1}
   MaxLines: 200
+  ShowStackTrace: 0
+  ShowCommandResponseLogs: 1

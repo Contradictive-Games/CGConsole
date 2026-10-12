@@ -3,41 +3,41 @@ using UnityEngine.UI;
 
 namespace CG.Console
 {
-    public class ExampleCommandExecutor : MonoBehaviour
+    internal sealed class ExampleCommandExecutor : MonoBehaviour
     {
         [Header("Prefab")]
-        public GameObject Prefab;
-        public Button ExecuteCommandFromSpawnedPrefabButton;
-        public Button LogWarningButton;
-        public Button LogErrorButton;
+        [SerializeField] private GameObject prefab;
+        [SerializeField] private Button executeCommandFromSpawnedPrefabButton;
+        [SerializeField] private Button logWarningButton;
+        [SerializeField] private Button logErrorButton;
 
         private void Start()
         {
-            if(ExecuteCommandFromSpawnedPrefabButton != null)
+            if(executeCommandFromSpawnedPrefabButton != null)
             {
-                ExecuteCommandFromSpawnedPrefabButton.onClick.AddListener(
+                executeCommandFromSpawnedPrefabButton.onClick.AddListener(
                     delegate { LogAStatementFromASpawnedPrefab(); }
                 );
             }
-            if (LogWarningButton != null) LogWarningButton.onClick.AddListener(() => ConsoleCommands.TryExecute("log_warning"));
-            if (LogErrorButton != null) LogErrorButton.onClick.AddListener(() => ConsoleCommands.TryExecute("log_error"));
+            if (logWarningButton != null) logWarningButton.onClick.AddListener(() => ConsoleCommands.TryExecute("log_warning"));
+            if (logErrorButton != null) logErrorButton.onClick.AddListener(() => ConsoleCommands.TryExecute("log_error"));
         }
 
-        public void LogStatementButtonPress()
+        internal void LogStatementButtonPress()
         {
             ConsoleCommands.TryExecute("log_nice");
         }
 
-        public void LogNumberFiveButtonPress()
+        internal void LogNumberFiveButtonPress()
         {
             ConsoleCommands.TryExecute("log_number 5");
         }
 
 
-        public void SpawnAnObjectWithCommands()
+        internal void SpawnAnObjectWithCommands()
         {
-            Instantiate(Prefab);
-            ExecuteCommandFromSpawnedPrefabButton.interactable = true;
+            Instantiate(prefab);
+            executeCommandFromSpawnedPrefabButton.interactable = true;
         }
 
         private void LogAStatementFromASpawnedPrefab()

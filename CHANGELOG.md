@@ -6,7 +6,10 @@ This release is mostly a simplification of previous class naming. Because this w
 
 ### Features
 
-- X
+- Add new CommandTarget parameter to `[ConsoleCmd]`
+- Automatic command registration (no longer needing to call ConsoleCommands.RegisterFrom())
+- DefaultCommands now automatically register
+- Enums can now be parsed in console command args
 
 ### Fixes/Improvements
 
@@ -15,12 +18,16 @@ This release is mostly a simplification of previous class naming. Because this w
 - Samples no longer required
 - Simplify names from ContradictiveGames.CGConsole -> CG.Console
 - Update README to use new names
+- Executed commands can not try to execute methods on invalid/dead targets
+- Fix package settings not keeping changes
 
 ### Misc. Changes
 
 - Changed version naming to be more standardized
 - Add gitattributes, gitignore, .github folder
 - Add bug report template
+- Default commands are now static
+- All context menus now use `CG Console` instead of `Contradictive Games/CGConsole`
 
 
 ## [v0.7.260105] - 01-05-2026
