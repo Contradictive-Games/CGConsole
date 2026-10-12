@@ -1,5 +1,7 @@
 namespace CG.Console
 {
+    public enum CommandTarget { Frist, All, Select }
+
     [System.AttributeUsage(System.AttributeTargets.Method)]
     public sealed class ConsoleCmdAttribute : System.Attribute
     {
@@ -7,6 +9,8 @@ namespace CG.Console
         public string Description { get; }
         public bool HideFromAutoComplete { get; }
         public bool HideFromHelpCommand { get; }
+
+        public CommandTarget Target { get; set; } = CommandTarget.All;
 
         public ConsoleCmdAttribute(string commandName, string description = "", bool hideFromAutoComplete = false,
         bool hideFromHelpCommand = false)

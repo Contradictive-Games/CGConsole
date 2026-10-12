@@ -1,41 +1,24 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
+using PlasticPipe.PlasticProtocol.Messages;
 using UnityEngine;
 
 namespace CG.Console
 {
     public static class ConsoleCommands
     {
-        internal readonly struct ConsoleCommand
-        {
-            internal readonly string Command;
-            internal readonly string Description;
-            internal readonly bool HideFromAutoComplete;
-            internal readonly bool HideFromHelpCommand;
-            internal readonly MethodInfo MethodToExecute;
-            internal readonly ParameterInfo[] Parameters;
-            internal readonly object Target;
+        private static readonly Dictionary<string, CommandDefinition> commands = new();
+        private static readonly HashSet<object> manualTargets = new();
+        private static bool initialized;
 
-            internal ConsoleCommand(string command, string description, bool hideFromAutoComplete, bool hideFromHelpCommand,
-                MethodInfo methodToExecute, ParameterInfo[] parameters, object target)
-            {
-                Command = command;
-                Description = description;
-                HideFromAutoComplete = hideFromAutoComplete;
-                HideFromHelpCommand = hideFromHelpCommand;
-                MethodToExecute = methodToExecute;
-                Parameters = parameters;
-                Target = target;
-            }
-        }
+        internal static string HelpText { get; private set; }
 
-
-        private static readonly Dictionary<string, ConsoleCommand> allCommands = new();
-        private readonly static HashSet<string> commandNameList = new();
-        private static DefaultCommands defaultCommandsInstance;
+        private static ConsolePackageSettings _settings;
         private static ConsolePackageSettings settings
         {
             get
@@ -45,91 +28,122 @@ namespace CG.Console
             }
         }
 
-        private static ConsolePackageSettings _settings;
 
-        private static string commandHelpString;
+        #region Init
 
-        private static bool initialized;
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            commands.Clear();
+            manualTargets.Clear();
+            initialized = false;
+            _settings = null;
+            HelpText = null;
+        }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void EnsureInitialized()
         {
-            if(initialized) return;
+            if (initialized) return;
             initialized = true;
-            RegisterDefaultCommands();
+            DiscoverCommands();
         }
+
+        private static void DiscoverCommands()
+        {
+            List<MethodInfo> methods = CommandDiscovery.FindMethodsWith<ConsoleCmdAttribute>();
+
+            methods.Sort((a, b) => IsBuiltIn(a).CompareTo(IsBuiltIn(b)));
+
+            bool requireInterface = settings != null && settings.RequireInterfaceForRegistration;
+
+            foreach (MethodInfo method in methods)
+            {
+                var attr = method.GetCustomAttribute<ConsoleCmdAttribute>();
+                string name = attr.CommandName.ToLowerInvariant().Trim();
+                bool builtIn = IsBuiltIn(method);
+
+                if (builtIn && settings != null && !settings.IsCommandEnabled(name)) continue;
+
+                if (!builtIn && requireInterface && !method.IsStatic && !typeof(ICommandProvider).IsAssignableFrom(method.DeclaringType)) continue;
+
+                if (!IsValidName(name)) continue;
+
+                if (commands.TryGetValue(name, out CommandDefinition existing))
+                {
+                    if (!builtIn)
+                    {
+                        Debug.LogError($"[{Globals.k_PACKAGE_NAME}]: `{name}` is declared on both {existing.DeclaryingType.Name} and {method.DeclaringType.Name}");
+                        continue;
+                    }
+                }
+
+                commands.Add(name, new CommandDefinition(name, attr, method));
+            }
+
+            BuildHelpText();
+
+            if (settings != null && settings.EnableLoggingForCommandRegistration)
+            {
+                Debug.Log($"[{Globals.k_PACKAGE_NAME}] Found {commands.Count}. Type `help` to list them");
+            }
+        }
+
+
+        private static bool IsBuiltIn(MethodInfo method) => method.DeclaringType.Assembly == typeof(ConsoleCommands).Assembly;
+
+        private static bool IsValidName(string name)
+        {
+            string pattern = settings != null && settings.UseCustomRegexForCommandNaming &&
+                !string.IsNullOrEmpty(settings.Regex)
+                ? settings.Regex
+                : Globals.k_DefaultCommandNameRegex;
+
+            if (Regex.IsMatch(name, pattern)) return true;
+
+            Debug.LogError($"[{Globals.k_PACKAGE_NAME}] Invalid command name `{name}`");
+            return false;
+        }
+
+        #endregion
 
 
         #region Command Registration
 
-        public static void RegisterAllCommands()
+        public static IDisposable Register(object target)
         {
-            EnsureInitialized();
-
-
-#if UNITY_2023_1_OR_NEWER
-            MonoBehaviour[] objects = GameObject.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
-#else
-            MonoBehaviour[] objects = GameObject.FindObjectsOfType<MonoBehaviour>();
-#endif
-
-            bool requireInterface = settings != null && settings.RequireInterfaceForRegistration;
-            foreach (var obj in objects)
+            if (target == null) throw new ArgumentNullException(nameof(target));
+            if (target is UnityEngine.Object)
             {
-                if (requireInterface && obj is not ICommandProvider) continue;
-
-                RegisterCommandsFrom(obj);
+                Debug.LogWarning($"[{Globals.k_PACKAGE_NAME}] {target} is a Unity object, commands are found automatically");
             }
+            manualTargets.Add(target);
+            return new Registration(target);
+        }
 
-            if (
-                settings != null &&
-                settings.EnableLoggingForCommandRegistration
-            )
+        public static void Unregister(object target) => manualTargets.Remove(target);
+
+        private sealed class Registration : IDisposable
+        {
+            private object target;
+            public Registration(object target) => this.target = target;
+
+            public void Dispose()
             {
-                Debug.Log($"(CG Console) Successfully registered {allCommands.Count} commands. Type `help` into the console to see all available commands.");
+                if (target == null) return;
+                manualTargets.Remove(target);
+                target = null;
             }
         }
 
 
+        [Obsolete("Commands are discovered automatically, call is no longer needed")]
+        public static void RegisterAllCommands(bool mustBeCommandProvider = true) => EnsureInitialized();
+
+        [Obsolete("Commands are discovered automatically. Use Register(object) for plain C# objects")]
         public static void RegisterCommandsFrom(object target)
         {
-            EnsureInitialized();
-            bool requireInterface = settings != null && settings.RequireInterfaceForRegistration;
-
-            if (requireInterface && target is not ICommandProvider) return;
-
-
-            var methods = target.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            string cmdName = "";
-            bool isDefaultCommand = target is DefaultCommands;
-            int registered = 0;
-            foreach (var method in methods)
-            {
-                var attr = method.GetCustomAttribute<ConsoleCmdAttribute>();
-                if (attr == null) continue;
-
-                cmdName = attr.CommandName.ToLowerInvariant().Trim();
-
-                if (!CommandIsValid(cmdName, isDefaultCommand)) continue;
-
-
-                AddNewConsoleCommand(cmdName, attr, method, target);
-                registered++;
-
-                if (!attr.HideFromAutoComplete) commandNameList.Add(cmdName);
-
-            }
-
-            if (
-                settings != null &&
-                settings.EnableLoggingForCommandRegistration)
-            {
-
-                Debug.Log($"[CG Console] Registered `{registered}` command(s) from {target}");
-            }
-
-
-
-            UpdateHelpString();
+            if (target is not UnityEngine.Object) Register(target);
         }
 
         #endregion
@@ -142,210 +156,173 @@ namespace CG.Console
             EnsureInitialized();
 
             string[] parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 0)
+            if (parts.Length == 0) return new CommandResponse(ResponseType.Invalid, "Command was empty");
+
+
+            string name = parts[0].ToLowerInvariant();
+            if (name.EndsWith("?")) return LogCommandHelp(name.TrimEnd('?'));
+
+
+            if (!commands.TryGetValue(name, out CommandDefinition cmd))
             {
-                return new CommandResponse(ResponseType.Invalid, "Command was empty");
+                return new CommandResponse(ResponseType.Error, $"Command `{name}` was not found");
             }
 
-            string cmd = parts[0].ToLower();
-            if (cmd.EndsWith("?"))
+            if (!TryBindArgs(cmd, parts, out object[] args, out string bindError))
             {
-                return LogCommandHelp(cmd.Remove(cmd.Length - 1));
+                return new CommandResponse(ResponseType.Invalid, bindError);
             }
 
-            if (!allCommands.TryGetValue(cmd, out ConsoleCommand command))
+            var targets = new List<object>();
+            if (!TryResolveTargets(cmd, null, targets))
             {
-                return new CommandResponse(ResponseType.Error, $"Command `{cmd}` was not found, or was not registered properly");
+                return new CommandResponse(ResponseType.Error, $"No active {cmd.DeclaryingType.Name} found for `{name}`");
             }
 
-            bool deadTarget = command.Target == null || (command.Target is UnityEngine.Object unityObject && unityObject == null);
-            if (deadTarget && !command.MethodToExecute.IsStatic)
+            foreach (object target in targets)
             {
-                allCommands.Remove(cmd);
-                commandNameList.Remove(cmd);
-                UpdateHelpString();
-                return new CommandResponse(ResponseType.Error, $"Could not find any valid targets for `{cmd}`");
+                CommandResponse response = Invoke(cmd, target, args);
+                if (response.ResponseType != ResponseType.Success) return response;
             }
 
-            object[] parameters = new object[command.Parameters.Length];
+            return new CommandResponse(ResponseType.Success);
+        }
 
-            if(parts.Length - 1 > command.Parameters.Length) return new CommandResponse(ResponseType.Invalid, $"Too many args for `{cmd}`");
-            
-            for (int i = 0; i < command.Parameters.Length; i++)
+        private static bool TryResolveTargets(CommandDefinition cmd, string selector, List<object> results)
+        {
+            if (cmd.IsStatic)
             {
-                if (i + 1 >= parts.Length)
+                results.Add(null);
+                return true;
+            }
+
+            if (cmd.IsUnityObject)
+            {
+                foreach (UnityEngine.Object obj in UnityEngine.Object.FindObjectsByType(cmd.DeclaryingType, FindObjectsSortMode.None))
                 {
-                    return new CommandResponse(ResponseType.Invalid, $"Not enough args for command '{cmd}'");
+                    if (obj is Behaviour behaviour && !behaviour.isActiveAndEnabled) continue;
+                    if (selector != null && !string.Equals(obj.name, selector, StringComparison.OrdinalIgnoreCase)) continue;
+                    results.Add(obj);
                 }
-
-                string arg = parts[i + 1];
-                Type paramType = command.Parameters[i].ParameterType;
-                try
+            }
+            else
+            {
+                foreach (object target in manualTargets)
                 {
-                    parameters[i] = paramType.IsEnum 
-                        ? Enum.Parse(paramType, arg, true)
-                        : Convert.ChangeType(arg, paramType, CultureInfo.InvariantCulture);
-                }
-                catch
-                {
-                    return new CommandResponse(ResponseType.Error, $"Failed to convert arg `{arg}` to type: {paramType.Name}");
+                    if (cmd.DeclaryingType.IsInstanceOfType(target)) results.Add(target);
                 }
             }
 
+            if (cmd.TargetMode == CommandTarget.Frist && results.Count > 1) results.RemoveRange(1, results.Count - 1);
+
+            return results.Count > 0;
+        }
+
+
+        private static CommandResponse Invoke(CommandDefinition cmd, object target, object[] args)
+        {
             try
             {
-                command.MethodToExecute.Invoke(command.Target, parameters);
+                object result = cmd.Method.Invoke(target, args);
+                if (result is CommandResponse response) return response;
+                if (result != null) Debug.Log(result);
+                return new CommandResponse(ResponseType.Success);
             }
             catch (TargetInvocationException e) when (e.InnerException != null)
             {
                 Debug.LogException(e.InnerException);
                 return new CommandResponse(ResponseType.Error, e.InnerException.Message);
             }
-
-            return new CommandResponse(ResponseType.Success);
         }
 
-
-        private static CommandResponse LogCommandHelp(string command)
+        private static bool TryBindArgs(CommandDefinition cmd, string[] parts, out object[] args, out string error)
         {
-            if (allCommands.TryGetValue(command, out ConsoleCommand cmd))
+            ParameterInfo[] ps = cmd.Parameters;
+            args = new object[ps.Length];
+            error = null;
+            int given = parts.Length - 1;
+
+            if (given > ps.Length)
             {
-                string parameters = "Args: ";
-                if (cmd.Parameters.Length == 0) parameters += "No args required";
-                else
+                error = $"Too many args for `{cmd.Name}` (expected: {ps.Length})";
+            }
+
+            for (int i = 0; i < ps.Length; i++)
+            {
+                if (i >= given)
                 {
-                    foreach (var param in cmd.Parameters)
+                    if (ps[i].HasDefaultValue)
                     {
-                        parameters += param.ParameterType + " ";
+                        args[i] = ps[i].DefaultValue;
+                        continue;
                     }
+                    error = $"Not enough args for `{cmd.Name}` (expected: {ps.Length})";
+                    return false;
                 }
-                Debug.Log($"{(!String.IsNullOrWhiteSpace(cmd.Description) ? cmd.Description : "No description was provided.")} // {parameters}");
-                return new CommandResponse(ResponseType.Info);
-            }
-            return new CommandResponse(ResponseType.Invalid, $"No command found by name: `{command}`");
-        }
 
-        #endregion
-
-
-        #region Default Commands
-
-        private static void RegisterDefaultCommands()
-        {
-            bool registerAll = settings == null;
-
-            if (registerAll || settings.IsCommandEnabled("help"))
-            {
-                allCommands.TryAdd(
-                    "help",
-                    new ConsoleCommand(
-                        "help",
-                        "List all available console commands",
-                        hideFromAutoComplete: true,
-                        hideFromHelpCommand: true,
-                        typeof(ConsoleCommands).GetMethod(nameof(ShowHelp), BindingFlags.Static | BindingFlags.NonPublic),
-                        new ParameterInfo[0],
-                        null
-                ));
-            }
-
-            defaultCommandsInstance = new();
-            RegisterCommandsFrom(defaultCommandsInstance);
-        }
-
-
-        private static void ShowHelp()
-        {
-            Debug.Log(commandHelpString);
-        }
-
-
-        #endregion
-
-
-        #region Utilities
-
-        private static ConsoleCommand AddNewConsoleCommand(string cmdName, ConsoleCmdAttribute attr, MethodInfo method, object target)
-        {
-            ParameterInfo[] @params = method.GetParameters();
-
-            ConsoleCommand cmd = new ConsoleCommand
-            (
-                cmdName.ToLowerInvariant().Trim(),
-                attr.Description,
-                attr.HideFromAutoComplete,
-                attr.HideFromHelpCommand,
-                method,
-                @params,
-                target
-            );
-            allCommands.Add(cmdName, cmd);
-
-            return cmd;
-        }
-
-
-        private static bool CommandIsValid(string cmdName, bool isDefault)
-        {
-            if (allCommands.ContainsKey(cmdName))
-            {
-                if(settings != null && settings.EnableLoggingForCommandRegistration) Debug.LogError($"Command `{cmdName}` has already been registered");
-                return false;
-            }
-            if (settings == null) return true;
-
-            if(isDefault && !settings.IsCommandEnabled(cmdName)) return false;
-
-            string pattern = settings.UseCustomRegexForCommandNaming && !string.IsNullOrEmpty(settings.Regex)
-                ? settings.Regex
-                : Globals.k_DefaultCommandNameRegex;
-            
-            if(!Regex.IsMatch(cmdName, pattern))
-            {
-                Debug.LogError($"Received invalid command format for `{cmdName}`");
-                return false;
+                string arg = parts[i + 1];
+                Type type = ps[i].ParameterType;
+                try
+                {
+                    args[i] = type.IsEnum
+                        ? Enum.Parse(type, arg, true)
+                        : Convert.ChangeType(arg, type, CultureInfo.InvariantCulture);
+                }
+                catch
+                {
+                    error = $"Failed to conver arg `{arg}` to type `{type.Name}`";
+                    return false;
+                }
             }
 
             return true;
         }
 
 
-        public static HashSet<string> GetCommandAutoComplete(string input)
+        private static CommandResponse LogCommandHelp(string name)
         {
-            HashSet<string> commands = new();
+            EnsureInitialized();
 
-            foreach (String s in commandNameList)
+            if (!commands.TryGetValue(name, out CommandDefinition cmd))
             {
-                if (s.Contains(input)) commands.Add(s);
+                return new CommandResponse(ResponseType.Invalid, $"No command found by name `{name}`");
             }
 
-            return commands;
+            string args = cmd.Parameters.Length == 0
+                ? "No args required"
+                : string.Join(" ", cmd.Parameters.Select(p => $"<{p.ParameterType.Name}{p.Name}"));
+
+            string description = string.IsNullOrWhiteSpace(cmd.Description)
+                ? "No description provided"
+                : cmd.Description;
+
+            Debug.Log($"{description} // Args: {args}");
+            return new CommandResponse(ResponseType.Info);
         }
 
-
-        private static void UpdateHelpString()
+        private static void BuildHelpText()
         {
-            string response = "Commands List: \n";
-            foreach (var (_, cmd) in allCommands)
+            var sb = new StringBuilder("Commands List:\n");
+            foreach (CommandDefinition cmd in commands.Values.Where(c => !c.HideFromHelpCommand).OrderBy(c => c.Name))
             {
-                if (cmd.HideFromHelpCommand) continue;
-                response += $"{cmd.Command}" + (!String.IsNullOrWhiteSpace(cmd.Description) ? "     (" + cmd.Description + ")" : "") + "\n";
+                sb.Append(cmd.Name);
+                if (!string.IsNullOrWhiteSpace(cmd.Description)) sb.Append("     (").Append(cmd.Description).Append(')');
+                sb.Append('\n');
             }
-            commandHelpString = response;
+            HelpText = sb.ToString();
+        }
 
+        public static List<string> GetCommandAutoComplete(string input)
+        {
+            EnsureInitialized();
+            input = input.ToLowerInvariant();
+            return commands.Values
+                .Where(c => !c.HideFromAutoComplete && c.Name.Contains(input))
+                .Select(c => c.Name)
+                .ToList();
         }
 
         #endregion
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics()
-        {
-            allCommands.Clear();
-            commandNameList.Clear();
-            initialized = false;
-            _settings = null;
-            commandHelpString = null;
-            defaultCommandsInstance = null;
-        }
     }
 }

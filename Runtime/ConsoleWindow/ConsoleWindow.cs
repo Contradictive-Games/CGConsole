@@ -97,7 +97,6 @@ namespace CG.Console
         private void Start()
         {
             if(Instance != this) return;
-            ConsoleCommands.RegisterAllCommands();
         }
 
         #endregion
@@ -162,7 +161,7 @@ namespace CG.Console
                 return;
             }
             
-            HashSet<string> commands = ConsoleCommands.GetCommandAutoComplete(input);
+            List<string> commands = ConsoleCommands.GetCommandAutoComplete(input);
             if(commands.Count == 0) {
                 autoCompletePopup.SetActive(false);
                 autoCompleteText.SetText("");
