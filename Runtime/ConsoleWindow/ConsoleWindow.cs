@@ -7,7 +7,7 @@ using TMPro;
 namespace CG.Console
 {
     [AddComponentMenu(Globals.k_PACKAGE_NAME + "/Console Window")]
-    public sealed class ConsoleWindow : MonoBehaviour
+    public class ConsoleWindow : MonoBehaviour, ICommandProvider
     {
         public static ConsoleWindow Instance { get; private set; }
 
@@ -25,10 +25,12 @@ namespace CG.Console
         [Header("Settings")]
         public ConsoleWindowSettings Settings;
 
+        private bool canAutoComplete;
+
 
         #region Enable/Disable
 
-        private void OnEnable()
+        protected virtual void OnEnable()
         {
             Application.logMessageReceived += CreateConsoleOutput;
             if(consoleInput != null) {
@@ -37,7 +39,7 @@ namespace CG.Console
         }
 
 
-        private void OnDisable()
+        protected virtual void OnDisable()
         {
             Application.logMessageReceived -= CreateConsoleOutput;
             if(consoleInput != null) {
@@ -50,18 +52,21 @@ namespace CG.Console
 
         #region Initialization
 
-        private void Awake()
+        protected virtual void Awake()
         {
-            if(Instance == null)
-            {
-                Instance = this;
-                DontDestroyOnLoad(gameObject);
-            }
-
-            else
+            if(Instance != null && Instance != this)
             {
                 Destroy(gameObject);
                 return;
+            }
+            
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+
+            if(Settings == null)
+            {
+                Debug.LogWarning("[CG Console]: No ConsoleWindowSettings assigned, using defaults");
+                Settings = ScriptableObject.CreateInstance<ConsoleWindowSettings>();
             }
 
 
@@ -74,20 +79,24 @@ namespace CG.Console
                 obj.transform.SetParent(transform);
                 consoleOutputPrefab.gameObject.SetActive(false);
             }
+
+            canAutoComplete = autoCompleteEnabled && autoCompletePopup != null && autoCompleteText != null;
             if(consoleInput != null)
             {
                 consoleInput.onSubmit.AddListener(OnCommandSubmitted);
-                if(autoCompleteEnabled && autoCompletePopup != null && autoCompleteText!= null)
+                if(canAutoComplete)
                 {
                     consoleInput.onValueChanged.AddListener(OnInputFieldUpdated);
                     autoCompletePopup.SetActive(false);
                 }
             }
+
         }
 
 
         private void Start()
         {
+            if(Instance != this) return;
             ConsoleCommands.RegisterAllCommands();
         }
 
@@ -98,12 +107,15 @@ namespace CG.Console
 
         private void CreateConsoleOutput(string message, string stackTrace = "", LogType type = LogType.Log)
         {
-            if (consoleOutputContainer.childCount >= (Settings?.MaxLines ?? Globals.k_MaxConsoleWindowLines))
+            while(consoleOutputContainer.childCount > 0 && consoleOutputContainer.childCount >= Settings.MaxLines)
             {
-                Destroy(consoleOutputContainer.GetChild(0).gameObject);
+                Transform oldest = consoleOutputContainer.GetChild(0);
+                oldest.SetParent(null);
+                Destroy(oldest.gameObject);
             }
 
             TMP_Text output = Instantiate(consoleOutputPrefab, consoleOutputContainer);
+            output.gameObject.SetActive(true);
             string log = $"<color=#{Settings.GetLogColorByLogType(type)}>[{DateTime.Now:HH:mm:ss}]: {message} {(Settings.ShowStackTrace ? $"Stack Trace: {stackTrace}" : "")}</color>";
 
             output.SetText(log);
@@ -117,21 +129,26 @@ namespace CG.Console
 
         #region InputField Handling
 
+        private static LogType ToLogType(ResponseType type) => type switch
+        {
+            ResponseType.Success => LogType.Assert,
+            ResponseType.Info => LogType.Log,
+            ResponseType.Invalid => LogType.Warning,
+            _ => LogType.Error
+        };
+
         private void OnCommandSubmitted(string input)
         {
             CommandResponse response = ConsoleCommands.TryExecute(input);
             if(Settings.ShowCommandResponseLogs && !String.IsNullOrWhiteSpace(response.Message)) 
             {
-                CreateConsoleOutput(response.Message, type: response.ResponseType != ResponseType.Success 
-                    ? LogType.Error 
-                    : LogType.Assert
-                );
+                CreateConsoleOutput(response.Message, type: ToLogType(response.ResponseType));
             }
 
             if(response.ResponseType == ResponseType.Success)
             {
                 consoleInput.text = "";
-                autoCompletePopup.SetActive(false);
+                if(canAutoComplete) autoCompletePopup.SetActive(false);
             }
 
             consoleInput.ActivateInputField();
@@ -162,6 +179,15 @@ namespace CG.Console
         }
 
         #endregion
+
+
+        protected virtual void OnDestroy()
+        {
+            if(Instance == this) Instance = null;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetInstance() => Instance = null;
 
     }
 }

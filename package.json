@@ -1,6 +1,6 @@
 {
-    "name": "com.CG.Console",
-    "version": "v0.7.260105",
+    "name": "com.contradictivegames.console",
+    "version": "0.8.0",
     "displayName": "CG Console",
     "description": "CG Console is a developer console that supports adding custom commands, and executing them from a console window.",
     "documentationUrl": "https://github.com/Contradictive-Games/RGS-CGConsole/blob/main/README.md",
@@ -10,9 +10,13 @@
         "name": "Contradictive Games",
         "url": "https://www.contradictivegames.com"
     },
+    "unity": "6000.0",
+    "dependencies": {
+        "com.unity.ugui": "2.0.0"
+    },
     "samples": [{
         "displayName": "Console Demo",
         "description": "Demo assets for the console",
-        "path": "Samples~/Console Demo"
+        "path": "Samples~/ConsoleDemo"
     }]
 }

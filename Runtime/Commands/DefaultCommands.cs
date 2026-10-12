@@ -10,11 +10,13 @@ namespace CG.Console
         [ConsoleCmd("load", "Load a level by name (non-async)")]
         private void LoadScene(string sceneName)
         {
-            if (SceneManager.GetSceneByName(sceneName) != null)
+            if (!Application.CanStreamedLevelBeLoaded(sceneName))
             {
-                SceneManager.LoadScene(sceneName);
-                Debug.Log($"Loading level: {sceneName}");
+                Debug.LogError($"Scene `{sceneName}` isn't in build settings");
+                return;
             }
+            Debug.Log($"Loading level: {sceneName}");
+            SceneManager.LoadScene(sceneName);
         }
 
         #endregion

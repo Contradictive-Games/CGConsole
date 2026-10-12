@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -48,14 +49,21 @@ namespace CG.Console
 
         private static string commandHelpString;
 
-        private static bool registeredDefaultCommands = false;
+        private static bool initialized;
+
+        private static void EnsureInitialized()
+        {
+            if(initialized) return;
+            initialized = true;
+            RegisterDefaultCommands();
+        }
 
 
         #region Command Registration
 
-        public static void RegisterAllCommands(bool mustBeCommandProvider = true)
+        public static void RegisterAllCommands()
         {
-            RegisterDefaultCommands();
+            EnsureInitialized();
 
 
 #if UNITY_2023_1_OR_NEWER
@@ -64,7 +72,7 @@ namespace CG.Console
             MonoBehaviour[] objects = GameObject.FindObjectsOfType<MonoBehaviour>();
 #endif
 
-            bool requireInterface = settings.RequireInterfaceForRegistration || mustBeCommandProvider;
+            bool requireInterface = settings != null && settings.RequireInterfaceForRegistration;
             foreach (var obj in objects)
             {
                 if (requireInterface && obj is not ICommandProvider) continue;
@@ -84,18 +92,16 @@ namespace CG.Console
 
         public static void RegisterCommandsFrom(object target)
         {
-            bool requireInterface = false;
-            if (settings != null)
-            {
-                requireInterface = settings.RequireInterfaceForRegistration;
-            }
+            EnsureInitialized();
+            bool requireInterface = settings != null && settings.RequireInterfaceForRegistration;
 
             if (requireInterface && target is not ICommandProvider) return;
 
 
             var methods = target.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             string cmdName = "";
-
+            bool isDefaultCommand = target is DefaultCommands;
+            int registered = 0;
             foreach (var method in methods)
             {
                 var attr = method.GetCustomAttribute<ConsoleCmdAttribute>();
@@ -103,10 +109,11 @@ namespace CG.Console
 
                 cmdName = attr.CommandName.ToLowerInvariant().Trim();
 
-                if (!CommandIsValid(cmdName)) continue;
+                if (!CommandIsValid(cmdName, isDefaultCommand)) continue;
 
 
                 AddNewConsoleCommand(cmdName, attr, method, target);
+                registered++;
 
                 if (!attr.HideFromAutoComplete) commandNameList.Add(cmdName);
 
@@ -117,7 +124,7 @@ namespace CG.Console
                 settings.EnableLoggingForCommandRegistration)
             {
 
-                Debug.Log($"(CG Console) Registered `{cmdName}` command from {target}");
+                Debug.Log($"[CG Console] Registered `{registered}` command(s) from {target}");
             }
 
 
@@ -132,6 +139,8 @@ namespace CG.Console
 
         public static CommandResponse TryExecute(string input)
         {
+            EnsureInitialized();
+
             string[] parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 0)
             {
@@ -149,12 +158,19 @@ namespace CG.Console
                 return new CommandResponse(ResponseType.Error, $"Command `{cmd}` was not found, or was not registered properly");
             }
 
-            if (command.Target == null && !command.MethodToExecute.IsStatic)
+            bool deadTarget = command.Target == null || (command.Target is UnityEngine.Object unityObject && unityObject == null);
+            if (deadTarget && !command.MethodToExecute.IsStatic)
             {
-                return new CommandResponse(ResponseType.Error, $"Could not find any valid targets for `{cmd}");
+                allCommands.Remove(cmd);
+                commandNameList.Remove(cmd);
+                UpdateHelpString();
+                return new CommandResponse(ResponseType.Error, $"Could not find any valid targets for `{cmd}`");
             }
 
             object[] parameters = new object[command.Parameters.Length];
+
+            if(parts.Length - 1 > command.Parameters.Length) return new CommandResponse(ResponseType.Invalid, $"Too many args for `{cmd}`");
+            
             for (int i = 0; i < command.Parameters.Length; i++)
             {
                 if (i + 1 >= parts.Length)
@@ -166,7 +182,9 @@ namespace CG.Console
                 Type paramType = command.Parameters[i].ParameterType;
                 try
                 {
-                    parameters[i] = Convert.ChangeType(arg, paramType);
+                    parameters[i] = paramType.IsEnum 
+                        ? Enum.Parse(paramType, arg, true)
+                        : Convert.ChangeType(arg, paramType, CultureInfo.InvariantCulture);
                 }
                 catch
                 {
@@ -178,10 +196,10 @@ namespace CG.Console
             {
                 command.MethodToExecute.Invoke(command.Target, parameters);
             }
-            catch (Exception e)
+            catch (TargetInvocationException e) when (e.InnerException != null)
             {
-                Debug.LogException(e);
-                return new CommandResponse(ResponseType.Error, e.Message);
+                Debug.LogException(e.InnerException);
+                return new CommandResponse(ResponseType.Error, e.InnerException.Message);
             }
 
             return new CommandResponse(ResponseType.Success);
@@ -214,13 +232,11 @@ namespace CG.Console
 
         private static void RegisterDefaultCommands()
         {
-            if (registeredDefaultCommands) return;
-
             bool registerAll = settings == null;
 
             if (registerAll || settings.IsCommandEnabled("help"))
             {
-                allCommands.Add(
+                allCommands.TryAdd(
                     "help",
                     new ConsoleCommand(
                         "help",
@@ -235,8 +251,6 @@ namespace CG.Console
 
             defaultCommandsInstance = new();
             RegisterCommandsFrom(defaultCommandsInstance);
-
-            registeredDefaultCommands = true;
         }
 
 
@@ -271,23 +285,24 @@ namespace CG.Console
         }
 
 
-        private static bool CommandIsValid(string cmdName)
+        private static bool CommandIsValid(string cmdName, bool isDefault)
         {
-            if (settings == null) return true;
-
-            if (!Regex.IsMatch(cmdName, settings.Regex))
-            {
-                Debug.LogError($"Received invalid command format. Please remove special characters (excluding underscores). Cmd: {cmdName}");
-                return false;
-            }
-            if(!settings.IsCommandEnabled(cmdName))
-            {
-                Debug.LogWarning($"Command `{cmdName}` exists in the DefaultCommands list and is disabled");
-                return false;
-            }
             if (allCommands.ContainsKey(cmdName))
             {
-                if (settings != null && settings.EnableLoggingForCommandRegistration) Debug.LogError($"Command `{cmdName}` has already been registered.");
+                if(settings != null && settings.EnableLoggingForCommandRegistration) Debug.LogError($"Command `{cmdName}` has already been registered");
+                return false;
+            }
+            if (settings == null) return true;
+
+            if(isDefault && !settings.IsCommandEnabled(cmdName)) return false;
+
+            string pattern = settings.UseCustomRegexForCommandNaming && !string.IsNullOrEmpty(settings.Regex)
+                ? settings.Regex
+                : Globals.k_DefaultCommandNameRegex;
+            
+            if(!Regex.IsMatch(cmdName, pattern))
+            {
+                Debug.LogError($"Received invalid command format for `{cmdName}`");
                 return false;
             }
 
@@ -322,6 +337,15 @@ namespace CG.Console
 
         #endregion
 
-
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            allCommands.Clear();
+            commandNameList.Clear();
+            initialized = false;
+            _settings = null;
+            commandHelpString = null;
+            defaultCommandsInstance = null;
+        }
     }
 }
