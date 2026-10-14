@@ -46,7 +46,7 @@ https://github.com/Contradictive-Games/CGConsole.git#v0.8.0
 
 **Requirements:**
 - Unity 6000.0+
-- TextMeshPro
+- Unity uGUI 2.0.0+
 
 To try any samples, select the package in **Package Manager** and open the **Samples** tab.
 
