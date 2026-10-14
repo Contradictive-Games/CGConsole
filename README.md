@@ -1,41 +1,63 @@
 # CG Console
 
-> CG Console is a developer console that allows you to create your own commands, and execute them from a console window or from scripts.
+**A developer console that allows you to easily create your own commands.**
+
+Speed up testing by adding an in-game developer console that can execute any custom commands.
+
+![Unity 6000.0+](https://img.shields.io/badge/Unity-6000.0%2B-black)
+![Version 0.8.0](https://img.shields.io/badge/version-0.8.0-blue)
+
+## Higlights
+
+- **Easy to use.** All you have to do is add a `[ConsoleCmd]` attribute to any function.
+- **Customizable behaviors.** Within the package settings, you can enable/disable default commands, modify the regex validation string, and more.
+- **Automatic command registration.** Commands are automatically registered on MonoBehaviors.
+
+---
+
+## Contents
+
+- [Overview](#overview)
+- [Installation](#installation)
+- [Getting Started](#getting-started)
+    - [Package Settings](#package-settings)
+    - [Attribute Usage](#attribute-usage)
+    - [Executing Commands](#executing-a-console-command)
+- [Known Limitations](#known-limitations)
+- [Roadmap](#roadmap)
+
+---
+
+## Overview
 
 
-
-## Notes
-
-This is a part of RGS (Re-usable Game Systems) that I have created to help potentially speed up game development.
-
-Within the `Runtime/Samples` folder, there is a prefab that contains an example version of a custom Console with a working UI. If you are to use this, you can create a `ExampleConsoleSettings` ScriptableObject that allows you to drag and drop different user-created themes. 
-
-To create this ScriptableObject just simply right-click anywhere within the Project window, and in the ContextMenu select the 'CGConsole Settings" option.
-
-This will of course not work with a custom made console, and only work with the demo version.
-
-
+---
 
 ## Installation
 
 
-### Install via git URL
+1. Open **Window -> Package Manager**.
+2. Click **+ -> Install package from git URL**.
+3. Paste the URL of the desired version like:
 
-To install via git URL, open the PackageManager window within the Editor and click "intall via git url" and entering:
-
+```text
+https://github.com/Contradictive-Games/CGConsole.git#v0.8.0
 ```
-https://github.com/Contradictive-Games/RGS-CGConsole.git
-```
+
+**Requirements:**
+- Unity 6000.0+
+- TextMeshPro
+
+To try any samples, select the package in **Package Manager** and open the **Samples** tab.
 
 
+## Getting Started
 
-## Setup And Examples
+### Package Settings
 
-### Setting Up CGConsole's Package Settings
+CG Console offers a few package customization options so that you can get this package to fit your needs maybe a bit better, or to also support custom command development.
 
-CGConsole offers a few package customization options so that you can get this package to fit your needs maybe a bit better, or to also support custom command development.
-
-To access the settings, in the toolbar you will need to select `Edit/Project Settings/CGConsole`. If there is no settings asset that already exists, it will prompt you to create a new settings asset, or you can optionally right click in the Project window and select `Contradictive Games/CGConsole/Package Settings`.
+To access the settings, in the toolbar you will need to select `Edit/Project Settings/CG Console`. If there is no settings asset that already exists, it will prompt you to create a new settings asset, or you can optionally right click in the Project window and select `CG Console/Package Settings`.
 
 The window will look like:
 
@@ -125,78 +147,21 @@ public void MyExampleCommandThatHasADescription(){
 
 ### Registering Commands
 
-To begin using any commands you create, you must register these commands. There's 2 ways of doing so, and it is **recommended** you use both.
+Commands do **not** need to be registered from MonoBehaviors as it is dont automatically, however if you want to add a `ConsoleCmd` to a plain C# class, make sure it is registered by doing:
 
-#### Register All Commands
-
-```cs
-CGConsoleCommands.RegisterAllCommands();
-```
-
-This will register all `[ConsoleCmd]` attributes and their functions from all MonoBehaviors that have implemented `ICommandProvider` and are actively in the scene when this function was called. If you are utilizing the `CGConsoleWindow` class in any way - this is called within the `Start` function.
-
-> **NOTE:** This command will by default ***only*** register MonoBehaviors that are using the `ICommandProvider` interface. However, you can override by adding `true` as the argument and it will register any MonoBehavior whether or not it implements the interface. It is best to never override it, but it is an option. 
->> **ADDITIONAL NOTE:** If in the package's settings you set the `RequireInterfaceForRegistration`, this will be overridden and always require the `ICommandProvider` interface
-
-
-#### Manually Register Commands
-
-When manually registering commands, just do:
-
-```cs
-CGConsoleCommands.RegisterCommandsFrom(this)
-```
-
-Calling this function does **not** require the class to implement `ICommandProvider`, unless you have set the `RequireInterfaceForRegistration` setting in the package's settings to `true`.
-
-This will register all `[ConsoleCmd]` attributes and their functions from the MonoBehavior we call this function from.
-
-
-#### Registering Commands From A Class
-
-Classes can support console commands as well, and are not required to implement `ICommandProvider`, unless you have set the `RequireInterfaceForRegistration` setting in the package's settings to `true`. 
-
-Just ensure that you properly register that class' commands by calling the `RegisterCommandsFrom(object target)` function.
-
-
-```cs
-public class TestClass
-{
-    //Properties
-    [ConsoleCmd("test_command")]
-    public void ExampleFunction(){
-        //Do something
-    }
-}
-
-
-public class TestMonoBehavior : MonoBehavior
-{
-
-    public TestClass MyClass = new();
-    
-    private void Start()
-    {
-        RegisterCommandsInMyTestClass();
-    }
-
-    private void RegisterCommandsInMyTestClass()
-    {
-        CGConsoleCommands.RegisterCommandsFrom(MyClass);
-    }
-
-}
+```csharp
+ConsoleCommands.Register(class);
 ```
 
 
 ### Executing a Console Command
 
-Commands can both be executed within a script and by typing the command within the `CGConsoleWindow` input field (or your own custom input field that parses the value and can submit the value like the script does, as this is what the `CGConsoleWindow` class does by default). 
+Commands can both be executed within a script and by typing the command within the `ConsoleWindow` input field (or your own custom input field that parses the value and can submit the value like the script does, as this is what the `ConsoleWindow` class does by default). 
 
 To execute a command within a script you can do:
 
 ```csharp
-CGConsoleCommands.TryExecute("command_goes_here");
+ConsoleCommands.TryExecute("command_goes_here");
 ```
 
 The `TryExecute` method returns a `CommandResponse` which looks like:
@@ -210,10 +175,10 @@ public enum ResponseType
     Error
 }
 
-public struct CommandResponse
+public readonly struct CommandResponse
 {
-    public ResponseType ResponseType;
-    public string Message;
+    public readonly ResponseType ResponseType;
+    public readonly string Message;
 
     public CommandResponse(ResponseType responseType, string message)
     {
@@ -223,25 +188,11 @@ public struct CommandResponse
 }
 ```
 
-The `CGConsoleCommands` class handles the building of the `CommandResponse`.
-
-
-
-## Console Usage
-
-To create your own Console Window, you can either use the created example console window prefab that is within the `Samples` folder within the package or you can create your own script that inherits the `CGConsoleWindow` class.
-
-The base class comes with a few useful methods. I recommend you look through the class in the `Runtime/ConsoleWindow/CGConsoleWindow.cs` file to see all of its core functionality.
-
-Additionally, if you'd like to create your own settings - you must inherit the `CGConsoleWindowSettings` ScriptableObject, and then type cast when using any of your custom settings.
-
-
 
 ## Known Limitations
 
 - Console Commands currently do not support more complex data types like `struct`, `Vector3`, `Vector2`, etc (in roadmap)
 - Console output is currently creating/destroying output log objects, instead of pooling (in roadmap)
-
 
 
 ## Roadmap
