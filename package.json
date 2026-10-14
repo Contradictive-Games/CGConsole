@@ -2,10 +2,10 @@
     "name": "com.contradictivegames.console",
     "version": "0.8.0",
     "displayName": "CG Console",
-    "description": "CG Console is a developer console that supports adding custom commands, and executing them from a console window.",
-    "documentationUrl": "https://github.com/Contradictive-Games/RGS-CGConsole/blob/main/README.md",
-    "changelogUrl": "https://github.com/Contradictive-Games/RGS-CGConsole/blob/main/CHANGELOG.md",
-    "licensesUrl": "https://github.com/Contradictive-Games/RGS-CGConsole/blob/main/LICENSE.md",
+    "description": "A developer console that supports adding custom commands, and executing them from a console window.",
+    "documentationUrl": "https://github.com/Contradictive-Games/CGConsole/blob/main/README.md",
+    "changelogUrl": "https://github.com/Contradictive-Games/CGConsole/blob/main/CHANGELOG.md",
+    "licensesUrl": "https://github.com/Contradictive-Games/CGConsole/blob/main/LICENSE.md",
     "author": {
         "name": "Contradictive Games",
         "url": "https://www.contradictivegames.com"

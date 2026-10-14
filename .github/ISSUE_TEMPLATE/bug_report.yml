@@ -1,0 +1,90 @@
+name: Bug report
+description: Something in CG Console isn't working as expected
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this! Please search existing issues first.
+
+  - type: input
+    id: package-version
+    attributes:
+      label: CG Console version
+      description: Found in Package Manager, or the `version` in package.json
+      placeholder: "0.8.0"
+    validations:
+      required: true
+
+  - type: input
+    id: unity-version
+    attributes:
+      label: Unity version
+      placeholder: "6000.0.40f1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: input-handling
+    attributes:
+      label: Active input handling
+      description: Project Settings → Player → Active Input Handling
+      options:
+        - Input System (new)
+        - Input Manager (old)
+        - Both
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Where does it happen?
+      multiple: true
+      options:
+        - Editor (Play Mode)
+        - Windows build
+        - macOS build
+        - Linux build
+        - Android
+        - iOS
+        - WebGL
+        - Other
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Include the command you typed and the `[ConsoleCmd]` method if relevant.
+      placeholder: |
+        1. Add `[ConsoleCmd("example")]` to a MonoBehaviour method
+        2. Enter Play Mode
+        3. Type `example 5` into the console
+        4. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console output / errors
+      description: Paste any errors or stack traces from the Unity Console.
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I'm using the latest release of CG Console
+        - label: I searched existing issues and this hasn't been reported
+          required: true

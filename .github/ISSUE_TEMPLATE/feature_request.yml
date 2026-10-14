@@ -1,0 +1,40 @@
+name: Feature request
+description: Suggest an idea or improvement for CG Console
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Commands / registration
+        - Argument parsing
+        - Console window / UI
+        - Auto-complete
+        - Package settings / Editor
+        - Samples
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe what you're trying to do and what gets in the way.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How would you like it to work? Example usage is very helpful.
+      render: csharp
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives or workarounds you've tried

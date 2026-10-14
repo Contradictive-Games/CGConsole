@@ -5,30 +5,27 @@
 Speed up testing by adding an in-game developer console that can execute any custom commands.
 
 ![Unity 6000.0+](https://img.shields.io/badge/Unity-6000.0%2B-black)
-![Version 0.8.0](https://img.shields.io/badge/version-0.8.0-blue)
+![Release](https://img.shields.io/github/v/release/Contradictive-Games/CGConsole)
+![License](https://img.shields.io/github/license/Contradictive-Games/CGConsole)
 
-## Higlights
+## Highlights
 
 - **Easy to use.** All you have to do is add a `[ConsoleCmd]` attribute to any function.
 - **Customizable behaviors.** Within the package settings, you can enable/disable default commands, modify the regex validation string, and more.
-- **Automatic command registration.** Commands are automatically registered on MonoBehaviors.
+- **Automatic command registration.** Commands are automatically registered on MonoBehaviours.
 
 ---
 
 ## Contents
 
-- [Overview](#overview)
 - [Installation](#installation)
+- [Quick Start](#quick-start)
 - [Getting Started](#getting-started)
     - [Package Settings](#package-settings)
     - [Attribute Usage](#attribute-usage)
     - [Executing Commands](#executing-a-console-command)
 - [Known Limitations](#known-limitations)
 - [Roadmap](#roadmap)
-
----
-
-## Overview
 
 
 ---
@@ -39,6 +36,7 @@ Speed up testing by adding an in-game developer console that can execute any cus
 1. Open **Window -> Package Manager**.
 2. Click **+ -> Install package from git URL**.
 3. Paste the URL of the desired version like:
+4. Replace the tag with the latest version from the [Releases](https://github.com/Contradictive-Games/CGConsole/releases) page.
 
 ```text
 https://github.com/Contradictive-Games/CGConsole.git#v0.8.0
@@ -50,6 +48,20 @@ https://github.com/Contradictive-Games/CGConsole.git#v0.8.0
 
 To try any samples, select the package in **Package Manager** and open the **Samples** tab.
 
+## Quick Start
+
+1. Import the **Console Demo** sample and drag `ConsolePanel` into your scene
+   (or add the **CG Console/Console Window** component to your own UI).
+2. Add a command to any MonoBehaviour that implements `ICommandProvider`:
+
+    ```csharp
+       public class Player : MonoBehaviour, ICommandProvider
+       {
+           [ConsoleCmd("heal", "Restore health")]
+           private void Heal(int amount) => health += amount;
+       }
+    ```
+3. Enter Play Mode and type `heal 50`. Type `help` to list every command.
 
 ## Getting Started
 
@@ -65,6 +77,8 @@ The window will look like:
 
 
 Default package settings and what they do:
+
+
 - EnableLoggingForCommandRegistration ***(default: false)***
     - This setting will log into the console the details for when the command was being registered
 - RequireInterfaceForRegistration ***(default: true)***
@@ -76,24 +90,18 @@ Default package settings and what they do:
     - This is the regex string that we will use to validate a `ConsoleCmd`'s name value. This can not be edited unless you toggle `UseCustomRegexForCommandNaming` to `true`.
 - Default Commands ***(default: all enabled)***
     - These are some of the default commands, which you can selectively enable/disable - if you'd like to be able to define your own custom versions. As an example, the DefaultCommand `load` does not asynchronously load scenes and may override your own `load` scene command's behaviors if you keep this enabled.
-    - Commands List and their functions
-        - `help`
-            - Lists all available commands that have been registered, so long as their `ConsoleCmd` attribute did not override the `HideFromHelpCommand` attribute to `false`. This will list both the command name, as well as the provided description
-        - `clear`
-            - Clears the console's current logs
-        - `quit`
-            - Exits the application (or play mode in the editor) fully
-        - `load`
-            - Loads a scene by the scene's name.
-            - Format: `load {scene_name_string}`
-            - ***Note: If this doesn't seem to work properly, ensure that the scene is placed within your project's scene list in the build settings***
-        - `set_intkey`
-            - Sets a PlayerPref key of type int to the desired value
-            - Format: `set_intkey {key_name_string} {desired_value}`
-        - `get_intkey`
-            - Logs a PlayerPref key of type int's value
-            - Format: `get_intkey {key_name_string}`
-        -***The rest of the get/set key commands are the same just different types***
+
+#### Default Commands
+
+Command | Usage | Description |
+|---|---|
+| `help` | `help` | Lists all registered commands |
+| `clear` | `clear` | Clears the console output |
+| `quit` | `quit` | Exits the application or play mode in the editor |
+| `load` | `load <scene_name>` | Loads a scene (scene must be in Build Settings, non-async) |
+| `set_intkey` | `set_intkey <key> <value>` | Sets an int PlayerPref |
+| `set_floatkey` | `set_floatkey <key> <value>` | Sets an float PlayerPref |
+| `set_stringkey` | `set_stringkey <key> <value>` | Sets an string PlayerPref |
 
 ### Default Behaviors
 
@@ -126,7 +134,7 @@ public void CommandIDontWantVisible(){
 
 [ConsoleCmd("log_normal")]
 public void MyExampleCommand(){
-    Debug.Log("We succesfully executed the `log_normal` command");
+    Debug.Log("We successfully executed the `log_normal` command");
 }
 
 [ConsoleCmd("log_number")]
@@ -147,10 +155,12 @@ public void MyExampleCommandThatHasADescription(){
 
 ### Registering Commands
 
-Commands do **not** need to be registered from MonoBehaviors as it is dont automatically, however if you want to add a `ConsoleCmd` to a plain C# class, make sure it is registered by doing:
+Commands do **not** need to be registered from MonoBehaviours as it is done automatically, however if you want to add a `ConsoleCmd` to a plain C# class, make sure it is registered by doing:
 
 ```csharp
-ConsoleCommands.Register(class);
+private IDisposable registration;
+void Init()    => registration = ConsoleCommands.Register(myPlainObject);
+void Cleanup() => registration.Dispose();
 ```
 
 
@@ -164,29 +174,13 @@ To execute a command within a script you can do:
 ConsoleCommands.TryExecute("command_goes_here");
 ```
 
-The `TryExecute` method returns a `CommandResponse` which looks like:
+The `TryExecute` method returns a `CommandResponse` which has the properties `ResponseType` and `Message`.
 
-```cs
-public enum ResponseType
-{
-    Success,
-    Invalid,
-    Info, //Generally just used for help commands
-    Error
-}
-
-public readonly struct CommandResponse
-{
-    public readonly ResponseType ResponseType;
-    public readonly string Message;
-
-    public CommandResponse(ResponseType responseType, string message)
-    {
-        ResponseType = responseType;
-        Message = message;
-    }
-}
-```
+`ResponseType` has 4 types:
+- `ResponseType.Success`
+- `ResponseType.Invalid`
+- `ResponseType.Info`
+- `ResponseType.Error`
 
 
 ## Known Limitations
@@ -205,7 +199,7 @@ Features that are not currently in this package, but I would eventually like to 
     - [X] Add suggestion box when typing a command for possible command inputs
     - [ ] Pressing `Tab` auto fills in first suggestion
     - [ ] Users can cycle through options in suggestion box with Up/Down arrow keys
-- [x] Support non-MonoBehavior classes being able to utilize commands
+- [x] Support non-MonoBehaviour classes being able to utilize commands
 - [ ] Console window resizing/dragging
 - [ ] Dev build only console commands
 - [ ] Pool console output logs

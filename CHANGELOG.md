@@ -1,36 +1,25 @@
 # CG Console Changelog
 
-## [v0.8.0] - 2026, Oct. 12
+## [Unreleased]
 
-This release is mostly a simplification of previous class naming. Because this will break any older version Public API, this is being bumped to a higher version. There has also be a few upgrades.
+## [v0.8.0] - 2026-10-12
 
-### Features
+### Added
+- `CommandTarget` option on `[ConsoleCmd]` (`First` / `All`)
+- Automatic command discovery: no more `ConsoleCommands.RegisterCommandsFrom()`
 
-- Add new CommandTarget parameter to `[ConsoleCmd]`
-- Automatic command registration (no longer needing to call ConsoleCommands.RegisterFrom())
-- DefaultCommands now automatically register
-- Enums can now be parsed in console command args
-
-### Fixes/Improvements
-
-- Package no longer imports documentation pictures
-- Fix sample package errors
-- Samples no longer required
-- Simplify names from ContradictiveGames.CGConsole -> CG.Console
-- Update README to use new names
-- Executed commands can not try to execute methods on invalid/dead targets
-- Fix package settings not keeping changes
-
-### Misc. Changes
-
-- Changed version naming to be more standardized
-- Add gitattributes, gitignore, .github folder
-- Add bug report template
+### Changed
+- **Breaking:** namespace `ContradictiveGames.CGConsole` → `CG.Console`
 - Default commands are now static
-- All context menus now use `CG Console` instead of `Contradictive Games/CGConsole`
+
+### Fixed
+- Package settings not saving changes
+
+[Unreleased]: https://github.com/Contradictive-Games/CGConsole/compare/v0.8.0...HEAD
+[v0.8.0]: https://github.com/Contradictive-Games/CGConsole/compare/v0.7...v0.8.0
 
 
-## [v0.7.260105] - 01-05-2026
+## [v0.7.260105] - 2026-01-05
 
 This release focuses primarily on being able to customize CGConsole to your needs, as well as adding a few QoL improvements and features to help with custom command creation and debugging.
 
@@ -60,7 +49,7 @@ This release focuses primarily on being able to customize CGConsole to your need
 - Update documentation to fit new release
 
 
-## [v0.6.251230] - 12-30-2025
+## [v0.6.251230] - 2025-12-130
 
 This marks the second release of CGConsole.
 
@@ -86,7 +75,7 @@ This marks the second release of CGConsole.
 - The `Console` class is no longer an abstract, and is a concrete MonoBehavior that can be added to any GameObject within the game
 
 
-## [v0.5] - 12-29-2025
+## [v0.5] - 2025-12-29
 
 This marks the first release of CGConsole.
 
