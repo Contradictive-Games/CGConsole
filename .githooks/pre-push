@@ -3,6 +3,7 @@
 while read -r local_ref _ _ _; do
     [[ "$local_ref" == refs/tags/v* ]] || continue
     tag="${local_ref#refs/tags/}"
+    echo "pre-push: checking $tag before it's pushed..."
 
     if [[ "$(git rev-parse "$tag^{commit}")" != "$(git rev-parse HEAD)" ]]; then
         echo "pre-push: check out $tag before pushing it, so the check sees the right files."
