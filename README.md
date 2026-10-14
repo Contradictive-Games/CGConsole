@@ -155,7 +155,7 @@ public void MyExampleCommandThatHasADescription(){
 
 ### Registering Commands
 
-Commands do **not** need to be registered from MonoBehaviours as it is done automatically, however if you want to add a `ConsoleCmd` to a plain C# class, make sure it is registered by doing:
+Commands do **not** need to be registered from MonoBehaviours as this is done automatically, however if you want to add a `ConsoleCmd` to a plain C# class, make sure it is registered by doing:
 
 ```csharp
 private IDisposable registration;
